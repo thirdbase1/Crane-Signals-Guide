@@ -7,6 +7,14 @@ import swingImage from "@assets/generated_images/vector_illustration_of_swing_ha
 import raiseBoomImage from "@assets/generated_images/vector_illustration_of_raise_boom_hand_signal.png";
 import lowerBoomImage from "@assets/generated_images/vector_illustration_of_lower_boom_hand_signal.png";
 import travelImage from "@assets/generated_images/vector_illustration_of_travel_hand_signal.png";
+import useMainHoistImage from "@assets/generated_images/vector_illustration_of_use_main_hoist_signal.png";
+import useWhiplineImage from "@assets/generated_images/vector_illustration_of_use_whipline_signal.png";
+import moveSlowlyImage from "@assets/generated_images/vector_illustration_of_move_slowly_signal.png";
+import dogEverythingImage from "@assets/generated_images/vector_illustration_of_dog_everything_signal.png";
+import extendBoomImage from "@assets/generated_images/vector_illustration_of_extend_boom_signal.png";
+import retractBoomImage from "@assets/generated_images/vector_illustration_of_retract_boom_signal.png";
+import extendBoomOneHandImage from "@assets/generated_images/vector_illustration_of_extend_boom_one_hand_signal.png";
+import retractBoomOneHandImage from "@assets/generated_images/vector_illustration_of_retract_boom_one_hand_signal.png";
 
 export interface Signal {
   id: string;
@@ -15,7 +23,7 @@ export interface Signal {
   explanation: string;
   detailedExplanation: string;
   image: string;
-  category: "Basic" | "Boom" | "Travel" | "Emergency";
+  category: "Basic" | "Boom" | "Travel" | "Emergency" | "Hoist Control" | "Advanced";
   safetyNotes: string[];
   mistakes: string[];
   quiz: {
@@ -89,6 +97,95 @@ export const signals: Signal[] = [
     }
   },
   {
+    id: "use-main-hoist",
+    name: "Use Main Hoist",
+    description: "Designate use of main hoist line.",
+    explanation: "Hand pointing to the side with index finger extended horizontally.",
+    detailedExplanation: "The 'Use Main Hoist' signal tells the operator to use the primary hoist mechanism rather than the auxiliary or whipline. This is used when a crane has multiple hoist systems. The signaler points horizontally with one finger extended to clearly designate which hoist system to engage.",
+    image: useMainHoistImage,
+    category: "Hoist Control",
+    safetyNotes: [
+      "Clearly indicate which hoist system is needed.",
+      "Operator must confirm understanding before proceeding.",
+      "Ensure the correct hook is available and rigged.",
+      "Know the capacity differences between hoist systems."
+    ],
+    mistakes: [
+      "Giving this signal without establishing clear visual communication first.",
+      "Pointing ambiguously.",
+      "Not confirming the operator acknowledged the command."
+    ],
+    quiz: {
+      question: "What does the 'Use Main Hoist' signal designate?",
+      options: [
+        "Lower the boom",
+        "The primary hoist mechanism to use",
+        "Travel direction",
+        "Emergency procedures"
+      ],
+      correctAnswer: 1
+    }
+  },
+  {
+    id: "use-whipline",
+    name: "Use Whipline",
+    description: "Designate use of auxiliary hoist (whipline).",
+    explanation: "Hand pointing upward with multiple fingers extended.",
+    detailedExplanation: "The 'Use Whipline' signal (also called auxiliary hoist or secondary hoist) tells the operator to use an alternate hoisting mechanism. This is typically used for lighter loads or when the main hoist is unavailable. The signaler points upward with multiple fingers to indicate the auxiliary system.",
+    image: useWhiplineImage,
+    category: "Hoist Control",
+    safetyNotes: [
+      "Whipline has different capacity - verify load is within limits.",
+      "Slower hoist speed than main hoist.",
+      "Use only for loads within auxiliary capacity rating."
+    ],
+    mistakes: [
+      "Using whipline for loads exceeding its rating.",
+      "Not communicating clearly which hoist line to use.",
+      "Confusing main hoist and whipline signals."
+    ],
+    quiz: {
+      question: "The whipline is also known as:",
+      options: [
+        "Main hoist",
+        "Auxiliary or secondary hoist",
+        "Emergency hoist",
+        "Backup crane"
+      ],
+      correctAnswer: 1
+    }
+  },
+  {
+    id: "move-slowly",
+    name: "Move Slowly",
+    description: "Reduce speed of operation.",
+    explanation: "Hand raised with palm forward, making slow deliberate movements.",
+    detailedExplanation: "The 'Move Slowly' signal tells the operator to reduce the speed of current operations. This can apply to hoist, swing, travel, or boom movements. The signaler raises their hand with palm forward and makes controlled, deliberate motions. This signal is critical when precision is required or when working near obstacles or personnel.",
+    image: moveSlowlyImage,
+    category: "Basic",
+    safetyNotes: [
+      "Use when approaching final load position.",
+      "Essential when working near structures or power lines.",
+      "Maintain clear visibility as speed reduces.",
+      "Be prepared to give STOP signal if needed."
+    ],
+    mistakes: [
+      "Giving signal too late when already moving fast.",
+      "Not being clear about which operation to slow down.",
+      "Failing to follow up with STOP if things go wrong."
+    ],
+    quiz: {
+      question: "When should you signal 'Move Slowly'?",
+      options: [
+        "Only for loads over 50 tons",
+        "When approaching final load position or obstacles",
+        "Only during emergencies",
+        "Every 10 minutes during operations"
+      ],
+      correctAnswer: 1
+    }
+  },
+  {
     id: "stop",
     name: "Stop",
     description: "Stop all crane motion.",
@@ -147,6 +244,36 @@ export const signals: Signal[] = [
         "It uses a whistle"
       ],
       correctAnswer: 1
+    }
+  },
+  {
+    id: "dog-everything",
+    name: "Dog Everything",
+    description: "Secure all movable parts - lock everything down.",
+    explanation: "Both hands making securing/locking motions in front of chest.",
+    detailedExplanation: "The 'Dog Everything' signal tells the operator to engage all mechanical locks, latches, and brakes to secure the crane in a stationary position. This includes boom locks, hook blocks, hydraulic brakes, and any movable components. The signaler makes deliberate locking/securing motions with both hands to emphasize the security requirement.",
+    image: dogEverythingImage,
+    category: "Basic",
+    safetyNotes: [
+      "Use at end of workday before crane is left unattended.",
+      "Critical for weather events or emergency situations.",
+      "Verify all dogs/locks are fully engaged visually.",
+      "No personnel should work near a 'dogged' crane."
+    ],
+    mistakes: [
+      "Not verifying all locks engaged.",
+      "Assuming boom is locked when it's not.",
+      "Leaving equipment unattended without dogging everything."
+    ],
+    quiz: {
+      question: "What does 'Dog Everything' mean?",
+      options: [
+        "Lower the boom slowly",
+        "Use the auxiliary hoist",
+        "Lock and secure all movable parts",
+        "Swing the boom 360 degrees"
+      ],
+      correctAnswer: 2
     }
   },
   {
@@ -238,6 +365,124 @@ export const signals: Signal[] = [
         "Load goes up"
       ],
       correctAnswer: 1
+    }
+  },
+  {
+    id: "extend-boom",
+    name: "Extend Boom",
+    description: "Extend telescoping boom sections.",
+    explanation: "Both arms extended forward horizontally, palms down, moving outward.",
+    detailedExplanation: "The 'Extend Boom' signal tells the operator to telescope the boom outward to increase its length. This is used on telescoping cranes to increase the working radius. The signaler extends both arms forward with palms down and moves them outward in a spreading motion to indicate extension.",
+    image: extendBoomImage,
+    category: "Advanced",
+    safetyNotes: [
+      "Only used on telescoping booms.",
+      "Do not extend boom while load is suspended.",
+      "Extending boom changes center of gravity - may require repositioning.",
+      "Listen for hydraulic pressure changes."
+    ],
+    mistakes: [
+      "Using on non-telescoping booms.",
+      "Extending with load suspended.",
+      "Not checking stability after extension."
+    ],
+    quiz: {
+      question: "What type of crane uses the 'Extend Boom' signal?",
+      options: [
+        "Fixed boom cranes",
+        "Telescoping boom cranes",
+        "Only derricks",
+        "Overhead cranes"
+      ],
+      correctAnswer: 1
+    }
+  },
+  {
+    id: "retract-boom",
+    name: "Retract Boom",
+    description: "Retract telescoping boom sections.",
+    explanation: "Both arms extended forward horizontally, palms down, moving inward.",
+    detailedExplanation: "The 'Retract Boom' signal tells the operator to telescope the boom inward to shorten its length. This is the opposite of extend boom and is used when reducing the working radius. The signaler extends both arms forward with palms down and moves them inward toward the body in a closing motion.",
+    image: retractBoomImage,
+    category: "Advanced",
+    safetyNotes: [
+      "Only used on telescoping booms.",
+      "Do not retract boom while load is suspended.",
+      "Retracting boom may require repositioning to maintain load angle.",
+      "Allow for smooth hydraulic operation."
+    ],
+    mistakes: [
+      "Retracting with load suspended.",
+      "Not watching for boom section alignment.",
+      "Retracting too quickly."
+    ],
+    quiz: {
+      question: "What is the opposite movement of 'Extend Boom'?",
+      options: [
+        "Raise Boom",
+        "Lower Boom",
+        "Retract Boom",
+        "Swing"
+      ],
+      correctAnswer: 2
+    }
+  },
+  {
+    id: "extend-boom-one-hand",
+    name: "Extend Boom (One Hand)",
+    description: "Extend one side of boom or single operation.",
+    explanation: "One arm extended forward horizontally, palm down, moving outward.",
+    detailedExplanation: "The 'Extend Boom (One Hand)' signal is used to extend one section of a multi-part telescoping boom or to control single-side extension on asymmetrical boom systems. The signaler uses one arm extended forward with palm down, moving outward to indicate which side or section to extend.",
+    image: extendBoomOneHandImage,
+    category: "Advanced",
+    safetyNotes: [
+      "Clearly indicate which boom section to extend.",
+      "Ensure balanced extension to maintain stability.",
+      "Used only on specific multi-section boom cranes."
+    ],
+    mistakes: [
+      "Using when full extend boom is needed.",
+      "Not indicating which section clearly.",
+      "Creating unbalanced loads."
+    ],
+    quiz: {
+      question: "When is 'Extend Boom (One Hand)' used?",
+      options: [
+        "Always instead of two-handed extend",
+        "For single-section or one-side boom extension",
+        "For emergency situations only",
+        "When wind speed is high"
+      ],
+      correctAnswer: 1
+    }
+  },
+  {
+    id: "retract-boom-one-hand",
+    name: "Retract Boom (One Hand)",
+    description: "Retract one side of boom or single operation.",
+    explanation: "One arm extended forward horizontally, palm down, moving inward.",
+    detailedExplanation: "The 'Retract Boom (One Hand)' signal tells the operator to retract one section of a multi-part telescoping boom. The signaler uses one arm extended forward with palm down, moving inward toward the body to indicate which side or section to retract.",
+    image: retractBoomOneHandImage,
+    category: "Advanced",
+    safetyNotes: [
+      "Maintain balance during single-side retraction.",
+      "Verify all sections align properly.",
+      "Do not retract while load is suspended."
+    ],
+    mistakes: [
+      "Creating unbalanced boom sections.",
+      "Retracting wrong section.",
+      "Rapid uncontrolled retraction."
+    ],
+    quiz: {
+      question: "The opposite of 'Retract Boom (One Hand)' is:",
+      options: [
+        "Hoist",
+        "Swing",
+        "Extend Boom (One Hand)",
+        "Travel"
+      ],
+      correctAnswer: 2
     }
   },
   {
