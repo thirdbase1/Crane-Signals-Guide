@@ -15,6 +15,8 @@ import extendBoomImage from "@assets/generated_images/vector_illustration_of_ext
 import retractBoomImage from "@assets/generated_images/vector_illustration_of_retract_boom_signal.png";
 import extendBoomOneHandImage from "@assets/generated_images/vector_illustration_of_extend_boom_one_hand_signal.png";
 import retractBoomOneHandImage from "@assets/generated_images/vector_illustration_of_retract_boom_one_hand_signal.png";
+import raiseBoomLowerLoadImage from "@assets/generated_images/vector_illustration_of_raise_boom_lower_load_signal.png";
+import lowerBoomRaiseLoadImage from "@assets/generated_images/vector_illustration_of_lower_boom_raise_load_signal.png";
 
 export interface Signal {
   id: string;
@@ -481,6 +483,66 @@ export const signals: Signal[] = [
         "Swing",
         "Extend Boom (One Hand)",
         "Travel"
+      ],
+      correctAnswer: 2
+    }
+  },
+  {
+    id: "raise-boom-lower-load",
+    name: "Raise Boom, Lower Load",
+    description: "Simultaneously raise boom angle while lowering the load.",
+    explanation: "Both hands used simultaneously - one hand with thumb pointing up, other with forefinger pointing down in small circles.",
+    detailedExplanation: "The 'Raise Boom, Lower Load' signal tells the operator to perform two actions at the same time: boom up and hoist down. This combined signal is used to reposition loads efficiently. The signaler uses both hands - one showing the raise boom thumbs-up signal while the other shows the lower load with fingers pointing down in circles. This avoids the need to stop and start multiple times.",
+    image: raiseBoomLowerLoadImage,
+    category: "Advanced",
+    safetyNotes: [
+      "Operator must understand combined signal clearly.",
+      "Load will move toward crane and downward simultaneously.",
+      "Watch load position throughout the combined movement.",
+      "Ensure boom path is clear of obstacles."
+    ],
+    mistakes: [
+      "Using unclear hand positions.",
+      "Not establishing clear hand communication before signaling.",
+      "Using combined signals without operator confirmation."
+    ],
+    quiz: {
+      question: "What two movements occur with 'Raise Boom, Lower Load'?",
+      options: [
+        "Boom down and load up",
+        "Boom up and load down",
+        "Swing and hoist",
+        "Travel and swing"
+      ],
+      correctAnswer: 1
+    }
+  },
+  {
+    id: "lower-boom-raise-load",
+    name: "Lower Boom, Raise Load",
+    description: "Simultaneously lower boom angle while raising the load.",
+    explanation: "Both hands used simultaneously - one hand with thumb pointing down, other with forefinger pointing up in small circles.",
+    detailedExplanation: "The 'Lower Boom, Raise Load' signal instructs the operator to perform two concurrent actions: boom down and hoist up. This is the opposite of the raise boom/lower load signal. The signaler uses both hands - one showing the lower boom thumbs-down signal while the other shows the hoist with fingers pointing up in circles.",
+    image: lowerBoomRaiseLoadImage,
+    category: "Advanced",
+    safetyNotes: [
+      "Load will move away from crane and upward simultaneously.",
+      "Verify boom doesn't swing before executing.",
+      "Watch for load swinging from combined movements.",
+      "Ensure adequate clearance above the load path."
+    ],
+    mistakes: [
+      "Confusing this with raise boom/lower load.",
+      "Using wrong hand signals.",
+      "Not verifying operator understands before signaling."
+    ],
+    quiz: {
+      question: "What is the opposite of 'Raise Boom, Lower Load'?",
+      options: [
+        "Stop",
+        "Travel",
+        "Lower Boom, Raise Load",
+        "Emergency Stop"
       ],
       correctAnswer: 2
     }
