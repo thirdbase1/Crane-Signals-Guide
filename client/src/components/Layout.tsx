@@ -1,8 +1,10 @@
 import { Link, useLocation } from "wouter";
-import { HardHat, Menu, X, Download, BookOpen, Home } from "lucide-react";
+import { HardHat, Menu, X, Download, BookOpen, Home, Printer } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+// @ts-ignore
+import html2pdf from "html2pdf.js";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -17,7 +19,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-background font-roboto">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 print:hidden">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
           <Link href="/" className="flex items-center gap-2">
             <div className="bg-primary p-1.5 rounded-md">
@@ -89,7 +91,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/40 py-6 md:py-10">
+      <footer className="border-t bg-muted/40 py-6 md:py-10 print:hidden">
         <div className="container px-4 md:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <HardHat className="h-5 w-5 text-muted-foreground" />
