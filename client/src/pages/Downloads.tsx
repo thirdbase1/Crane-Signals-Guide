@@ -54,7 +54,7 @@ export default function Downloads() {
     const opt = {
       margin: 0.5,
       filename: 'crane-signals-complete-handbook.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'png' as const, quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
@@ -100,7 +100,7 @@ export default function Downloads() {
     const opt = {
       margin: 0.5,
       filename: `${signal.name.toLowerCase().replace(/\s+/g, '-')}-card.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'png' as const, quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };

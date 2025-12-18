@@ -576,6 +576,67 @@ export const signals: Signal[] = [
       ],
       correctAnswer: 2
     }
+  },
+  {
+    id: "travel-both-tracks",
+    name: "Travel (Both Tracks)",
+    description: "Move both tracks together at same speed.",
+    explanation: "Both arms extended forward, palms open, making pushing motions together.",
+    detailedExplanation: "The 'Travel Both Tracks' signal tells the operator to move the crane forward or backward with both tracks engaged and moving at equal speeds. This ensures the crane moves in a straight line without turning. The signaler extends both arms forward with open palms and makes synchronized pushing motions.",
+    image: travelImage,
+    category: "Travel",
+    safetyNotes: [
+      "Ensures straight-line travel without turning.",
+      "Critical for narrow pathways or confined spaces.",
+      "Both tracks must be in good condition for balanced movement.",
+      "Monitor ground stability on both sides."
+    ],
+    mistakes: [
+      "Using one arm instead of two (looks like normal travel).",
+      "Not ensuring both tracks move at same speed.",
+      "Not checking for balanced weight distribution."
+    ],
+    quiz: {
+      question: "When should 'Travel (Both Tracks)' be used?",
+      options: [
+        "For all travel movements",
+        "When turning the crane",
+        "For straight-line travel in confined spaces",
+        "Only on wet ground"
+      ],
+      correctAnswer: 2
+    }
+  },
+  {
+    id: "travel-one-track",
+    name: "Travel (One Track)",
+    description: "Move one track only - used for turning.",
+    explanation: "One arm extended forward, palm open, making a pushing motion; other arm remains down.",
+    detailedExplanation: "The 'Travel (One Track)' signal tells the operator to engage only one track, allowing the crane to pivot or turn around its center point. This is used in tight spaces where a three-point turn is necessary or when precise positioning is required. The signaler extends only one arm forward with an open palm.",
+    image: travelImage,
+    category: "Travel",
+    safetyNotes: [
+      "Used for turning and precise positioning.",
+      "Ensure adequate space for rotation.",
+      "Watch for uneven ground beneath stationary track.",
+      "Be aware of swing space needed for any suspended load.",
+      "One track remains stationary while the other moves."
+    ],
+    mistakes: [
+      "Engaging both tracks when only one is intended.",
+      "Rotating crane while load is suspended (dangerous).",
+      "Not checking ground stability at pivot point."
+    ],
+    quiz: {
+      question: "What is the primary purpose of 'Travel (One Track)'?",
+      options: [
+        "Moving forward fast",
+        "Turning or precise positioning",
+        "Emergency escape",
+        "Reducing fuel consumption"
+      ],
+      correctAnswer: 1
+    }
   }
 ];
 

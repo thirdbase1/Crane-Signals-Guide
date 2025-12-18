@@ -96,12 +96,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <HardHat className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm font-semibold text-muted-foreground">
-              CraneSignal Pro &copy; 2024
+              CraneSignal Pro &copy; 2025
             </span>
           </div>
           <div className="text-sm text-muted-foreground text-center md:text-right">
-            <p>Educational material for training purposes.</p>
-            <p>Always verify with official OSHA/site regulations.</p>
+            <p>Official ANSI standard hand signals for mobile cranes.</p>
           </div>
         </div>
       </footer>
