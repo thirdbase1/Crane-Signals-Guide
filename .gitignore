@@ -4,3 +4,6 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+aleo/build
+aleo/tests/*.aleo
+aleo/src/*.aleo
