@@ -12,7 +12,8 @@
     "db:push": "drizzle-kit push",
     "build:aleo": "cd aleo && leo build",
     "test:aleo": "cd aleo && leo test",
-    "deploy:aleo": "tsx script/deploy-aleo.ts"
+    "deploy:aleo": "tsx script/deploy-aleo.ts",
+    "issue-certs:aleo": "tsx script/issue-certs.ts"
   },
   "dependencies": {
     "@aleohq/sdk": "^0.6.9",
