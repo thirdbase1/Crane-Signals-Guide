@@ -19,9 +19,9 @@ async function issueCerts() {
         const receiver = account.address().to_string();
         const fee = 0.5; // Execution fee
 
-        console.log(`Starting to issue 5 certifications to ${receiver}...`);
+        console.log(`Starting to issue 10 certifications to ${receiver}...`);
 
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 1; i <= 10; i++) {
             console.log(`Issuing certification #${i} (Signal Type: ${i})...`);
             try {
                 const txId = await programManager.execute(
