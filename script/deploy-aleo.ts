@@ -18,6 +18,7 @@ async function deploy() {
         const keyProvider = new AleoKeyProvider();
         const recordProvider = new NetworkRecordProvider(account, networkClient);
         const programManager = new ProgramManager("https://api.explorer.provable.com/v1", keyProvider, recordProvider);
+        programManager.setAccount(account);
 
         const programPath = path.join(process.cwd(), "aleo/build/main.aleo");
         if (!fs.existsSync(programPath)) {
