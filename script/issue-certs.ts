@@ -1,4 +1,4 @@
-import { Account, ProgramManager, NetworkRecordProvider, AleoNetworkClient, AleoKeyProvider } from "@aleohq/sdk";
+import { Account, ProgramManager, NetworkRecordProvider, AleoNetworkClient, AleoKeyProvider } from "@provablehq/sdk";
 
 async function issueCerts() {
     const privateKey = process.env.ALEO_PRIVATE_KEY;
