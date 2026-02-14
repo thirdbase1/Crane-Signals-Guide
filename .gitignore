@@ -7,3 +7,6 @@ vite.config.ts.*
 aleo/build
 aleo/tests/*.aleo
 aleo/src/*.aleo
+aleo_voting/build
+aleo_voting/tests/*.aleo
+aleo_voting/src/*.aleo
