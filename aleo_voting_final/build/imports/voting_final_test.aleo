@@ -1,5 +1,6 @@
+import credits.aleo;
 import voting_v1.aleo;
-program voting_test.aleo;
+program voting_final_test.aleo;
 
 function dummy:
 

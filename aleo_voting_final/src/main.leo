@@ -1,8 +1,18 @@
+import credits.aleo;
+
 program voting_v1.aleo {
 
     // The @admin attribute makes the program upgradeable by the specified address.
     @admin(address="aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl")
     async constructor() {}
+
+    const VOTE_FEE: u64 = 100000u64; // 0.1 ALEO
+
+    record VotingEligibility {
+        owner: address,
+        dao: address,
+        token_balance: u64,
+    }
 
     record EncryptedVote {
         owner: address,
@@ -61,7 +71,16 @@ program voting_v1.aleo {
         public proposal_id: u64,
         private vote_hash: field,
         private nonce: field,
-    ) -> (EncryptedVote, Future) {
+        private credits_in: credits.aleo/credits,
+    ) -> (EncryptedVote, credits.aleo/credits, credits.aleo/credits, Future) {
+        // Deduct 0.1 ALEO fee to the admin/treasury address
+        let treasury: address = aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
+        let (change, transfer_record): (credits.aleo/credits, credits.aleo/credits) = credits.aleo/transfer_private(
+            credits_in,
+            treasury,
+            VOTE_FEE
+        );
+
         let encrypted_vote: EncryptedVote = EncryptedVote {
             owner: self.caller,
             proposal_id: proposal_id,
@@ -72,7 +91,7 @@ program voting_v1.aleo {
         let key_data: VoteKey = VoteKey { pid: proposal_id, voter: self.caller };
         let vote_key: field = BHP256::hash_to_field(key_data);
 
-        return (encrypted_vote, finalize_cast_private_vote(vote_key));
+        return (encrypted_vote, change, transfer_record, finalize_cast_private_vote(vote_key));
     }
 
     async function finalize_cast_private_vote(public vote_key: field) {

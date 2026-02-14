@@ -1,4 +1,5 @@
-program voting_v1_vibe_coding.aleo;
+import credits.aleo;
+program voting_v1.aleo;
 
 record EncryptedVote:
     owner as address.private;
@@ -31,7 +32,7 @@ function create_proposal:
     input r1 as field.public;
     input r2 as u64.public;
     async create_proposal r0 self.caller r1 r2 into r3;
-    output r3 as voting_v1_vibe_coding.aleo/create_proposal.future;
+    output r3 as voting_v1.aleo/create_proposal.future;
 
 finalize create_proposal:
     input r0 as u64.public;
@@ -48,12 +49,16 @@ function cast_private_vote:
     input r0 as u64.public;
     input r1 as field.private;
     input r2 as field.private;
-    cast self.caller r0 r1 r2 into r3 as EncryptedVote.record;
-    cast r0 self.caller into r4 as VoteKey;
-    hash.bhp256 r4 into r5 as field;
-    async cast_private_vote r5 into r6;
-    output r3 as EncryptedVote.record;
-    output r6 as voting_v1_vibe_coding.aleo/cast_private_vote.future;
+    input r3 as credits.aleo/credits.record;
+    call credits.aleo/transfer_private r3 aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl 100000u64 into r4 r5;
+    cast self.caller r0 r1 r2 into r6 as EncryptedVote.record;
+    cast r0 self.caller into r7 as VoteKey;
+    hash.bhp256 r7 into r8 as field;
+    async cast_private_vote r8 into r9;
+    output r6 as EncryptedVote.record;
+    output r4 as credits.aleo/credits.record;
+    output r5 as credits.aleo/credits.record;
+    output r9 as voting_v1.aleo/cast_private_vote.future;
 
 finalize cast_private_vote:
     input r0 as field.public;
@@ -65,7 +70,7 @@ finalize cast_private_vote:
 function finalize_proposal:
     input r0 as u64.public;
     async finalize_proposal r0 into r1;
-    output r1 as voting_v1_vibe_coding.aleo/finalize_proposal.future;
+    output r1 as voting_v1.aleo/finalize_proposal.future;
 
 finalize finalize_proposal:
     input r0 as u64.public;
@@ -74,4 +79,4 @@ finalize finalize_proposal:
     set r2 into proposals[r0];
 
 constructor:
-    assert.eq edition 0u16;
+    assert.eq program_owner aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
