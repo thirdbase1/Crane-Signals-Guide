@@ -10,3 +10,6 @@ aleo/src/*.aleo
 aleo_voting_final/build
 aleo_voting_final/tests/*.aleo
 aleo_voting_final/src/*.aleo
+aleo_premium_voting/build
+aleo_premium_voting/tests/*.aleo
+aleo_premium_voting/src/*.aleo
