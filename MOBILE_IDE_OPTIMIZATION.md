@@ -9,6 +9,7 @@ Developing ZK-dApps on mobile requires a different approach than desktop due to 
 ### Warm-Starting the Aleo VM
 Don't wait for the user to tap "Deploy" to initialize the engine.
 - **Protocol**: Initialize `initThreadPool(1)` when the user enters the code editor.
+- **RAM Check**: Before initializing the thread pool, check `navigator.deviceMemory`. If memory is < 4GB, avoid high thread counts (stick to 1-2) to prevent browser tab crashes.
 - **Benefit**: Reduces the first-proof latency by ~2-3 seconds.
 
 ### Prover-as-a-Service (PaaS)

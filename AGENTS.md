@@ -1,4 +1,4 @@
-# 🧠 AGENTS.md: The Ultimate Aleo Technical Protocol (v4.0 - Master Architect Edition)
+# 🧠 AGENTS.md: The Ultimate Aleo Technical Protocol (v5.0 - Universal Mastery Edition)
 
 This document is the absolute technical "skill" manual for any AI agent working with the Aleo blockchain. It codifies the architecture, language, interaction protocols, and security audits required to build world-class, privacy-preserving decentralized applications.
 
@@ -168,11 +168,61 @@ AI agents must map specific error messages to these programmatic fixes:
 
 ---
 
-## ✅ 13. Final Protocol Checklist
+---
+
+## 🔐 13. ZK-Privacy Logic Patterns
+Universal dApps must implement these patterns to be technically "Aleo-Native":
+
+### A. Nullifiers (Double-Spend Prevention)
+To prevent a private record from being used twice without revealing it:
+1.  **Logic**: Generate a unique hash (`nullifier`) from the record's serial number and a private secret.
+2.  **Mapping**: Store the nullifier in an on-chain `mapping nullifiers: field => bool`.
+3.  **Assertion**: `assert(!Mapping::contains(nullifiers, current_nullifier))`.
+
+### B. Commit-Reveal 2.0
+For bidding or secret voting:
+1.  **Commit**: User creates a hash of `(value, salt)` and stores it on-chain via a transition.
+2.  **Reveal**: User provides `(value, salt)` later. The transition hashes them and asserts they match the commitment.
+
+### C. Stealth Addresses (Identity Privacy)
+Use `group` arithmetic to derive one-time payment addresses.
+- **Formula**: $P = H(r * A) * G + A$ (where $A$ is the recipient's public key, $r$ is a random scalar).
+
+---
+
+## 🧪 14. Off-Chain Authentication & DID
+Aleo keys are for more than just transactions; they are for **Identity**.
+
+### `signMessage` Protocol
+For server-side session management (AuthN):
+1.  **Frontend**: `const sig = await wallet.signMessage(new TextEncoder().encode("Session: 1234"));`
+2.  **Backend**: Verify the signature using `@provablehq/sdk`'s `Signature.verify()` method.
+3.  **Benefit**: Log users in without a password, using only their Aleo Wallet.
+
+---
+
+## ⚙️ 15. CI/CD for Aleo (GitHub Actions)
+Automate the "Technical Nervous System" using this workflow protocol:
+1.  **Job 1: Build**: Run `leo build` to ensure the circuit compiles.
+2.  **Job 2: Test**: Run `leo test` and fail the PR if any test fails.
+3.  **Job 3: Formal Verification**: Use automated scripts to check for `self.caller` assertions in sensitive transitions.
+
+---
+
+## 🎨 16. UX/UI Design Principles (Latency & Clarity)
+Building a "Vibe" website for Aleo requires handling ZK-specific friction:
+1.  **The "Proving" State**: Always show a specialized loader for proof generation (Synthesis). Explain to the user: "Generating Zero-Knowledge Proof...".
+2.  **Privacy Badges**: UI components should explicitly tag inputs as 🔒 **Private** (local) or 🌐 **Public** (on-chain).
+3.  **Fee Transparency**: Show the user the **Namespace Fee** warning if their chosen name is < 10 characters.
+
+---
+
+## ✅ 17. Final Protocol Checklist
 1.  **Constraint Count**: Check `leo build` output. If constraints > 1M, optimize.
 2.  **Privacy Guard**: Ensure no sensitive data is passed as `public` inputs to transitions.
 3.  **Fee Calculation**: Base deployment fee is ~2 credits; add 10 if name < 10 chars.
 4.  **Transaction Status**: Use `leo query transaction <ID>` to verify final inclusion.
+5.  **State Sync**: Ensure the frontend UI clears local "pending" state only after `leo query transaction` returns confirmed.
 
 ---
 *This protocol serves as the definitive cognitive architecture for Aleo AI Agents. Strictly adhere to these definitions to achieve flawless system integration.*

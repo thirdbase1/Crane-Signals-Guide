@@ -47,10 +47,12 @@ function subscribe_to_dao:
     input r1 as u64.public;
     input r2 as credits.aleo/credits.record;
     gt r1 10u64 into r3;
+    assert.eq r3 true;
     sub r1 10u64 into r4;
     mul r4 r0.subscription_fee into r5;
-    ternary r3 r5 0u64 into r6;
-    call credits.aleo/transfer_private r2 r0.owner r6 into r7 r8;
+    gt r5 0u64 into r6;
+    assert.eq r6 true;
+    call credits.aleo/transfer_private r2 r0.owner r5 into r7 r8;
     cast self.caller r0.owner self.caller 100800u32 true into r9 as DaoSubscription.record;
     async subscribe_to_dao into r10;
     output r9 as DaoSubscription.record;
@@ -59,6 +61,16 @@ function subscribe_to_dao:
     output r10 as premium_voting_v1.aleo/subscribe_to_dao.future;
 
 finalize subscribe_to_dao:
+    assert.eq true true;
+
+function subscribe_free:
+    input r0 as PremiumDAO.record;
+    cast self.caller r0.owner self.caller 100800u32 true into r1 as DaoSubscription.record;
+    async subscribe_free into r2;
+    output r1 as DaoSubscription.record;
+    output r2 as premium_voting_v1.aleo/subscribe_free.future;
+
+finalize subscribe_free:
     assert.eq true true;
 
 function cast_vote:
