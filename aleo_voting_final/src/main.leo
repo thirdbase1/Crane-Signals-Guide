@@ -102,11 +102,14 @@ program voting_v1.aleo {
     }
 
     async transition finalize_proposal(public proposal_id: u64) -> Future {
-        return finalize_finalize_proposal(proposal_id);
+        return finalize_finalize_proposal(proposal_id, self.caller);
     }
 
-    async function finalize_finalize_proposal(public proposal_id: u64) {
+    async function finalize_finalize_proposal(public proposal_id: u64, public caller: address) {
         let proposal: ProposalData = Mapping::get(proposals, proposal_id);
+
+        // Ensure only the proposal creator can finalize it
+        assert_eq(caller, proposal.creator);
 
         let finalized_proposal: ProposalData = ProposalData {
             id: proposal.id,
