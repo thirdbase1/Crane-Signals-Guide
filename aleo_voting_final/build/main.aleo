@@ -69,14 +69,16 @@ finalize cast_private_vote:
 
 function finalize_proposal:
     input r0 as u64.public;
-    async finalize_proposal r0 into r1;
+    async finalize_proposal r0 self.caller into r1;
     output r1 as voting_v1.aleo/finalize_proposal.future;
 
 finalize finalize_proposal:
     input r0 as u64.public;
-    get proposals[r0] into r1;
-    cast r1.id r1.creator r1.title_hash r1.created_block r1.duration_blocks true into r2 as ProposalData;
-    set r2 into proposals[r0];
+    input r1 as address.public;
+    get proposals[r0] into r2;
+    assert.eq r1 r2.creator;
+    cast r2.id r2.creator r2.title_hash r2.created_block r2.duration_blocks true into r3 as ProposalData;
+    set r3 into proposals[r0];
 
 constructor:
     assert.eq program_owner aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
