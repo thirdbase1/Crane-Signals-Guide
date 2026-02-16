@@ -29,6 +29,7 @@ program freemium_voting_v1.aleo {
     mapping voted: field => bool;
     mapping has_used_free_vote: address => bool;
 
+    // Create a new proposal
     async transition create_proposal(
         public proposal_id: u64,
         public title_hash: field,
@@ -43,6 +44,9 @@ program freemium_voting_v1.aleo {
         public title_hash: field,
         public duration_blocks: u64,
     ) {
+        let exists: bool = Mapping::contains(proposals, proposal_id);
+        assert(!exists);
+
         let proposal_data: ProposalData = ProposalData {
             id: proposal_id,
             creator: creator,
@@ -52,13 +56,10 @@ program freemium_voting_v1.aleo {
             is_finalized: false,
         };
 
-        let exists: bool = Mapping::contains(proposals, proposal_id);
-        assert(!exists);
-
         Mapping::set(proposals, proposal_id, proposal_data);
     }
 
-    // Option 1: Free Vote (Only once per address)
+    // Cast a FREE vote (Only once per address across all proposals)
     async transition cast_vote_free(
         public proposal_id: u64,
         private vote_hash: field,
@@ -79,11 +80,11 @@ program freemium_voting_v1.aleo {
     }
 
     async function finalize_cast_vote_free(public vote_key: field, public voter: address) {
-        // 1. Ensure user hasn't used their free vote ever
+        // 1. Ensure user hasn't used their lifetime free vote
         let already_used: bool = Mapping::get_or_use(has_used_free_vote, voter, false);
         assert(!already_used);
 
-        // 2. Ensure user hasn't voted on this proposal
+        // 2. Ensure user hasn't voted on THIS proposal
         let has_voted: bool = Mapping::get_or_use(voted, vote_key, false);
         assert(!has_voted);
 
@@ -91,7 +92,7 @@ program freemium_voting_v1.aleo {
         Mapping::set(has_used_free_vote, voter, true);
     }
 
-    // Option 2: Paid Vote (Subsequent votes)
+    // Cast a PAID vote (Subsequent votes or if free vote already used)
     async transition cast_vote_paid(
         public proposal_id: u64,
         private vote_hash: field,
@@ -101,6 +102,7 @@ program freemium_voting_v1.aleo {
 
         let treasury: address = aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
 
+        // Deduct fee
         let (change, transfer_record): (credits.aleo/credits, credits.aleo/credits) = credits.aleo/transfer_private(
             credits_in,
             treasury,
@@ -127,6 +129,7 @@ program freemium_voting_v1.aleo {
         Mapping::set(voted, vote_key, true);
     }
 
+    // Finalize a proposal (Creator only)
     async transition finalize_proposal(public proposal_id: u64) -> Future {
         return finalize_finalize_proposal(proposal_id, self.caller);
     }
@@ -134,7 +137,7 @@ program freemium_voting_v1.aleo {
     async function finalize_finalize_proposal(public proposal_id: u64, public caller: address) {
         let proposal: ProposalData = Mapping::get(proposals, proposal_id);
 
-        // Access Control: Only creator can finalize
+        // Access Control
         assert_eq(caller, proposal.creator);
 
         let finalized_proposal: ProposalData = ProposalData {

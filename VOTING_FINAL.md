@@ -1,33 +1,30 @@
-# 🗳️ Aleo Private Voting: Technical Breakdown (voting_v1_vibe_coding.aleo)
+# 🗳️ Aleo Private Voting: Technical Breakdown (freemium_voting_v1.aleo)
 
 This document covers the implementation of a high-performance, privacy-preserving voting system on Aleo.
 
 ---
 
-## 🚀 Deployment Status
-*   **Program ID**: `voting_v1_vibe_coding.aleo`
-*   **Version**: 1.0 (Production Ready)
-*   **Checksum**: `[189u8, 205u8, 110u8, 130u8, 198u8, 106u8, 184u8, 58u8, 78u8, 91u8, 158u8, 102u8, 231u8, 211u8, 97u8, 191u8, 9u8, 237u8, 157u8, 246u8, 64u8, 220u8, 233u8, 104u8, 53u8, 95u8, 44u8, 100u8, 116u8, 1u8, 221u8, 59u8]`
+## 🚀 Deployment Info
+*   **Program ID**: `freemium_voting_v1.aleo`
+*   **Version**: 1.0
+*   **Checksum**: `[27u8, 72u8, 25u8, 32u8, 201u8, 76u8, 182u8, 96u8, 165u8, 23u8, 106u8, 191u8, 17u8, 42u8, 238u8, 240u8, 132u8, 206u8, 55u8, 241u8, 198u8, 75u8, 72u8, 191u8, 205u8, 205u8, 226u8, 47u8, 234u8, 249u8, 17u8, 152u8]`
 
 ---
 
 ## 🛠️ Feature Set
-1.  **Private Voting**: Votes are hashed off-chain and stored as `EncryptedVote` records.
-2.  **Double-Vote Prevention**: Uses an on-chain mapping of `VoteKey` hashes.
-3.  **Access Control**: Only the original creator can finalize a proposal.
-4.  **Treasury Integration**: Deducts 0.1 ALEO fee per vote sent to the DAO treasury.
+1.  **Lifetime Free Vote**: Every address gets exactly one free vote across the entire platform life.
+2.  **Paid Subsequent Votes**: After the free vote is consumed, each vote costs 0.1 ALEO.
+3.  **Double-Vote Prevention**: Uses an on-chain mapping of hashed `VoteKey` (Proposal ID + Voter Address).
+4.  **Access Control**: Strictly enforced creator-only proposal finalization.
 
 ---
 
 ## 📞 API Usage
 
 ```typescript
-// Cast a private vote
-await programManager.execute(
-    "voting_v1_vibe_coding.aleo",
-    "cast_private_vote",
-    0.5,
-    false,
-    [proposalId, voteHash, nonce, creditsRecord]
-);
+// Cast a free vote
+await programManager.execute("freemium_voting_v1.aleo", "cast_vote_free", 0.1, false, [proposalId, voteHash, nonce]);
+
+// Cast a paid vote
+await programManager.execute("freemium_voting_v1.aleo", "cast_vote_paid", 0.1, false, [proposalId, voteHash, nonce, creditsRecord]);
 ```
