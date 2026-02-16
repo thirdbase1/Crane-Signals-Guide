@@ -1,8 +1,8 @@
 import credits.aleo;
 
-program premium_voting_v1_vibe_coding.aleo {
+program premium_voting_v2.aleo {
 
-    const VOTE_FEE: u64 = 100000u64; // 0.1 ALEO
+    const PLATFORM_FEE: u64 = 5000000u64; // 5 ALEO for DAO creation
 
     record PremiumDAO {
         owner: address,
@@ -17,46 +17,34 @@ program premium_voting_v1_vibe_coding.aleo {
         proposal_id: field,
         dao_address: address,
         title: field,
-        voting_end_block: u32,
-        is_finalized: bool,
-    }
-
-    record VoteRecord {
-        owner: address,
-        proposal_id: field,
-        voter: address,
-        vote_hash: field,
-        vote_nonce: field,
-        vote_index: u8,
+        created_at: u32,
     }
 
     record DaoSubscription {
         owner: address,
         dao_address: address,
         subscriber: address,
-        duration_blocks: u32,
+        expiry_block: u32,
         active: bool,
     }
 
-    // Create premium DAO (requires fee payment)
+    // Platform Admins
+    mapping admins: address => bool;
+
+    // Create premium DAO
     async transition create_premium_dao(
         public name: field,
         public token_address: address,
         public subscription_fee: u64,
-        private credits_in: credits.aleo/credits,
-        public setup_fee: u64
+        private credits_in: credits.aleo/credits
     ) -> (PremiumDAO, credits.aleo/credits, credits.aleo/credits, Future) {
 
-        let min_fee: u64 = 5000000u64; // 5 credits
-        assert(setup_fee >= min_fee);
-
-        // Treasury/Admin address for setup fees
         let treasury: address = aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
 
         let (change, payment): (credits.aleo/credits, credits.aleo/credits) = credits.aleo/transfer_private(
             credits_in,
             treasury,
-            setup_fee
+            PLATFORM_FEE
         );
 
         let dao_record: PremiumDAO = PremiumDAO {
@@ -71,47 +59,66 @@ program premium_voting_v1_vibe_coding.aleo {
     }
 
     async function finalize_create_premium_dao() {
-        // Placeholder
+        // Log or update global stats
     }
 
-    // Subscribe to DAO (Paid subscription)
-    async transition subscribe_to_dao(
+    // Create a proposal for a DAO (Only DAO owner can do this)
+    async transition create_proposal(
+        public dao: PremiumDAO,
+        public proposal_id: field,
+        public title: field
+    ) -> (ProposalRecord, Future) {
+
+        // Ensure the caller is the DAO owner
+        assert_eq(self.caller, dao.owner);
+
+        let proposal: ProposalRecord = ProposalRecord {
+            owner: self.caller,
+            proposal_id: proposal_id,
+            dao_address: dao.owner,
+            title: title,
+            created_at: 0u32, // To be set in finalize
+        };
+
+        return (proposal, finalize_create_proposal());
+    }
+
+    async function finalize_create_proposal() {
+        // Can track block.height if needed
+    }
+
+    // Subscribe to DAO (Paid)
+    async transition subscribe_paid(
         public dao_record: PremiumDAO,
-        public num_proposals: u64,
+        public duration_blocks: u32,
         private credits_in: credits.aleo/credits,
     ) -> (DaoSubscription, credits.aleo/credits, credits.aleo/credits, Future) {
 
-        let free_proposals: u64 = 10u64;
-        // Enforce that this transition is only for paid subscriptions
-        assert(num_proposals > free_proposals);
+        let total_fee: u64 = duration_blocks as u64 * dao_record.subscription_fee;
+        assert(total_fee > 0u64);
 
-        let fee: u64 = (num_proposals - free_proposals) * dao_record.subscription_fee;
-        // Ensure fee is at least 1u64 to avoid credits.aleo/transfer_private failure
-        assert(fee > 0u64);
-
-        // Transfer fee to the DAO owner
         let (change, payment): (credits.aleo/credits, credits.aleo/credits) = credits.aleo/transfer_private(
             credits_in,
             dao_record.owner,
-            fee
+            total_fee
         );
 
         let subscription: DaoSubscription = DaoSubscription {
             owner: self.caller,
             dao_address: dao_record.owner,
             subscriber: self.caller,
-            duration_blocks: 100800u32,
+            expiry_block: 0u32, // To be set in finalize
             active: true,
         };
 
-        return (subscription, change, payment, finalize_subscribe_to_dao());
+        return (subscription, change, payment, finalize_subscribe_paid(duration_blocks));
     }
 
-    async function finalize_subscribe_to_dao() {
-        // Placeholder
+    async function finalize_subscribe_paid(duration: u32) {
+        // logic to set expiry
     }
 
-    // Free subscription for the first 10 proposals
+    // Subscribe to DAO (Free Trial - 1000 blocks)
     async transition subscribe_free(
         public dao_record: PremiumDAO,
     ) -> (DaoSubscription, Future) {
@@ -120,7 +127,7 @@ program premium_voting_v1_vibe_coding.aleo {
             owner: self.caller,
             dao_address: dao_record.owner,
             subscriber: self.caller,
-            duration_blocks: 100800u32,
+            expiry_block: 0u32,
             active: true,
         };
 
@@ -128,33 +135,6 @@ program premium_voting_v1_vibe_coding.aleo {
     }
 
     async function finalize_subscribe_free() {
-        // Placeholder
-    }
-
-    // Cast encrypted vote
-    transition cast_vote(
-        public proposal_id: field,
-        public vote_hash: field,
-        public vote_nonce: field,
-        public vote_index: u8,
-    ) -> VoteRecord {
-        let vote: VoteRecord = VoteRecord {
-            owner: self.caller,
-            proposal_id: proposal_id,
-            voter: self.caller,
-            vote_hash: vote_hash,
-            vote_nonce: vote_nonce,
-            vote_index: vote_index,
-        };
-
-        return vote;
-    }
-
-    // Verify vote validity
-    transition verify_vote(
-        public vote_hash: field,
-        public expected_hash: field,
-    ) -> bool {
-        return vote_hash == expected_hash;
+        // logic to set expiry
     }
 }

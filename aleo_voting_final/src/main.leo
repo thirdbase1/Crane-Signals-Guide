@@ -1,14 +1,8 @@
 import credits.aleo;
 
-program voting_v1_vibe_coding.aleo {
+program freemium_voting_v1.aleo {
 
     const VOTE_FEE: u64 = 100000u64; // 0.1 ALEO
-
-    record VotingEligibility {
-        owner: address,
-        dao: address,
-        token_balance: u64,
-    }
 
     record EncryptedVote {
         owner: address,
@@ -27,12 +21,13 @@ program voting_v1_vibe_coding.aleo {
     }
 
     struct VoteKey {
-        pid: u64,
+        proposal_id: u64,
         voter: address,
     }
 
     mapping proposals: u64 => ProposalData;
     mapping voted: field => bool;
+    mapping has_used_free_vote: address => bool;
 
     async transition create_proposal(
         public proposal_id: u64,
@@ -63,14 +58,49 @@ program voting_v1_vibe_coding.aleo {
         Mapping::set(proposals, proposal_id, proposal_data);
     }
 
-    async transition cast_private_vote(
+    // Option 1: Free Vote (Only once per address)
+    async transition cast_vote_free(
+        public proposal_id: u64,
+        private vote_hash: field,
+        private nonce: field,
+    ) -> (EncryptedVote, Future) {
+
+        let encrypted_vote: EncryptedVote = EncryptedVote {
+            owner: self.caller,
+            proposal_id: proposal_id,
+            vote_hash: vote_hash,
+            nonce: nonce,
+        };
+
+        let key_data: VoteKey = VoteKey { proposal_id: proposal_id, voter: self.caller };
+        let vote_key: field = BHP256::hash_to_field(key_data);
+
+        return (encrypted_vote, finalize_cast_vote_free(vote_key, self.caller));
+    }
+
+    async function finalize_cast_vote_free(public vote_key: field, public voter: address) {
+        // 1. Ensure user hasn't used their free vote ever
+        let already_used: bool = Mapping::get_or_use(has_used_free_vote, voter, false);
+        assert(!already_used);
+
+        // 2. Ensure user hasn't voted on this proposal
+        let has_voted: bool = Mapping::get_or_use(voted, vote_key, false);
+        assert(!has_voted);
+
+        Mapping::set(voted, vote_key, true);
+        Mapping::set(has_used_free_vote, voter, true);
+    }
+
+    // Option 2: Paid Vote (Subsequent votes)
+    async transition cast_vote_paid(
         public proposal_id: u64,
         private vote_hash: field,
         private nonce: field,
         private credits_in: credits.aleo/credits,
     ) -> (EncryptedVote, credits.aleo/credits, credits.aleo/credits, Future) {
-        // Deduct 0.1 ALEO fee to the admin/treasury address
+
         let treasury: address = aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
+
         let (change, transfer_record): (credits.aleo/credits, credits.aleo/credits) = credits.aleo/transfer_private(
             credits_in,
             treasury,
@@ -84,13 +114,13 @@ program voting_v1_vibe_coding.aleo {
             nonce: nonce,
         };
 
-        let key_data: VoteKey = VoteKey { pid: proposal_id, voter: self.caller };
+        let key_data: VoteKey = VoteKey { proposal_id: proposal_id, voter: self.caller };
         let vote_key: field = BHP256::hash_to_field(key_data);
 
-        return (encrypted_vote, change, transfer_record, finalize_cast_private_vote(vote_key));
+        return (encrypted_vote, change, transfer_record, finalize_cast_vote_paid(vote_key));
     }
 
-    async function finalize_cast_private_vote(public vote_key: field) {
+    async function finalize_cast_vote_paid(public vote_key: field) {
         let has_voted: bool = Mapping::get_or_use(voted, vote_key, false);
         assert(!has_voted);
 
@@ -104,7 +134,7 @@ program voting_v1_vibe_coding.aleo {
     async function finalize_finalize_proposal(public proposal_id: u64, public caller: address) {
         let proposal: ProposalData = Mapping::get(proposals, proposal_id);
 
-        // Ensure only the proposal creator can finalize it
+        // Access Control: Only creator can finalize
         assert_eq(caller, proposal.creator);
 
         let finalized_proposal: ProposalData = ProposalData {

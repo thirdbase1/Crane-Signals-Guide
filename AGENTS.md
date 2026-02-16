@@ -1,526 +1,382 @@
 # 🧠 AGENTS.md: The Ultimate Aleo Mastery Protocol (v9.0 - Granular Mastery Edition)
 
-This document is the absolute technical "brain" for any AI agent or senior engineer working with the Aleo blockchain. It provides a piece-by-piece breakdown of 74 specialized technical areas.
+This document is the absolute technical "brain" for any AI agent or senior engineer working with the Aleo blockchain. It provides a piece-by-piece breakdown of 74 specialized technical areas, explaining the **Definition**, **Leo/SDK Implementation**, **AI Interpretation Logic**, and **Critical Pitfalls**.
 
 ---
 
-## 🌎 1. Aleo Blockchain Architecture
-- **Definition**: Aleo is a Layer 1 blockchain that uses Zero-Knowledge Proofs (ZKP) to provide both privacy and scalability.
-- **How to Use**: Use Aleo when you need to perform verifiable computations without revealing the sensitive inputs on-chain.
-- **Code Example**: Transition logic is computed locally; only the proof and state root are submitted.
-- **AI Logic**: Always assume transitions are private and finalize blocks are public.
-- **Pitfalls**: Do not store massive datasets on-chain; use hashes and Merkle roots instead.
+## 🌎 SECTION I: Core Blockchain Architecture
 
-## ✍️ 2. snarkVM execution engine
+### 1. Aleo Layer 1 Ledger
+- **Definition**: A decentralized ledger that uses Zero-Knowledge Proofs (ZKP) to decouple computation from verification.
+- **Implementation**: Computation happens off-chain (locally); only the proof is verified on-chain.
+- **AI Logic**: When designing dApps, always assume user data is private by default.
+- **Pitfalls**: Don't treat Aleo like Ethereum; there is no shared "world state" that transitions can read directly.
+
+### 2. snarkVM Execution Engine
 - **Definition**: The virtual machine that executes Aleo instructions and generates Varuna proofs.
-- **How to Use**: It handles the logic of Leo programs after they are compiled into Aleo bytecode.
-- **Code Example**: `cast r0 into r1 as my_record.record;` (AVM instruction).
-- **AI Logic**: When debugging, look at the `.aleo` file to see how registers are being mapped.
-- **Pitfalls**: High register counts increase proving time.
+- **Implementation**: Compiled `.aleo` files are executed by snarkVM.
+- **AI Logic**: Optimize code to reduce "gates" (constraints) to speed up user proof generation.
+- **Pitfalls**: High register counts in AVM instructions lead to memory-intensive proving.
 
-## 🔒 3. Record Model (UTXO-like)
-- **Definition**: The fundamental unit of private state. Records are consumed (spent) and created.
-- **How to Use**: Use records to store private balances or identity attributes.
-- **Code Example**: `record Note { owner: address, amount: u64 }`.
-- **AI Logic**: Treat records as one-time-use objects. If you need to "update" a balance, you must spend the old record and create a new one.
-- **Pitfalls**: Forgetting the `owner` field will cause compilation to fail.
+### 3. Record Model (Private State)
+- **Definition**: A UTXO-based model where state is stored in encrypted "Records".
+- **Implementation**: `record Note { owner: address, amount: u64 }`.
+- **AI Logic**: Treat records as consumable objects. To "update" a value, spend the old record and output a new one.
+- **Pitfalls**: A record can only be spent once. Concurrent transactions using the same record will fail.
 
-## 🤝 4. Async/Finalize Separation
-- **Definition**: The decoupling of proof generation (transition) and state commitment (finalize).
-- **How to Use**: Place state-changing logic (Mapping updates) in `finalize`.
-- **Code Example**: `async transition ... return finalize_name();`.
-- **AI Logic**: Transitions are local; Finalize is global. You cannot read Mappings inside a Transition.
-- **Pitfalls**: Trying to `Mapping::get` inside an `async transition` is a 100% failure rate error.
+### 4. Async/Finalize Separation
+- **Definition**: The separation between private proof generation (Transition) and public state commitment (Finalize).
+- **Implementation**: `async transition ... return finalize_call();`.
+- **AI Logic**: Transitions create proofs; Finalize updates mappings (public state).
+- **Pitfalls**: You cannot access `mappings` inside a transition. You must pass needed values as inputs.
 
-## ✍️ 5. Leo Syntax: Strict Typing
-- **Definition**: A functional language where every variable must have a defined type and suffix.
-- **How to Use**: Always append suffixes like `u8`, `u64`, `field`.
-- **Code Example**: `let x: u32 = 10u32;`.
-- **AI Logic**: Reject any code that uses generic numbers like `let x = 10;`.
-- **Pitfalls**: Type mismatch between `u32` and `u64` is a common source of bugs.
+---
 
-## 🛠️ 6. Optimization: Inline Functions
+## ✍️ SECTION II: Leo Language Mastery
+
+### 5. Strict Typing & Suffixes
+- **Definition**: Leo requires explicit types for every literal.
+- **Implementation**: `let x: u64 = 100u64;`, `let b: bool = true;`.
+- **AI Logic**: Never generate code without suffixes. The compiler will reject `let x = 100;`.
+- **Pitfalls**: Mixing `u32` and `u64` in math operations without casting.
+
+### 6. Inline Functions
 - **Definition**: Functions that are expanded at the call site to reduce circuit depth.
-- **How to Use**: Use `inline` for small, repetitive logic snippets.
-- **Code Example**: `inline function add(a: u64, b: u64) -> u64 { return a + b; }`.
-- **AI Logic**: Use inlines to stay under the 1M gate limit.
-- **Pitfalls**: Overusing inlines can make the circuit too wide.
-
-## 🔒 7. The Nullifier Pattern
-- **Definition**: A technique to prevent double-spending of private records.
-- **How to Use**: Store the hash of a spent record in an on-chain mapping.
-- **Code Example**: `Mapping::set(spent, hash(note), true);`.
-- **AI Logic**: Use this whenever a private record is used to update a public state.
-- **Pitfalls**: Not checking the nullifier before setting it.
-
-## 🚀 8. Stealth Addresses
-- **Definition**: One-time addresses generated by a sender for a recipient.
-- **How to Use**: Protect recipient privacy by not sending to their public address directly.
-- **Code Example**: $P = H(r * A) * G + A$.
-- **AI Logic**: Use `group` arithmetic to derive the stealth address.
-- **Pitfalls**: Ensure the recipient has the View Key to scan for these addresses.
-
-## 🗳️ 9. Commit-Reveal Pattern
-- **Definition**: A two-stage process: submit a hash (commit), then reveal the data (reveal).
-- **How to Use**: Use for secret bidding or voting to prevent front-running.
-- **Code Example**: `commitment = BHP256::hash_to_field(vote);`.
-- **AI Logic**: Store the commitment in a mapping during stage 1.
-- **Pitfalls**: Not adding a `salt` to the commitment, making it guessable.
-
-## 🔑 10. View Keys (Selective Disclosure)
-- **Definition**: A key that allows decryption of records without spending authority.
-- **How to Use**: Share with auditors or regulators for compliance.
-- **Code Example**: `account.viewKey().to_string()`.
-- **AI Logic**: Use View Keys in the SDK to decrypt records fetched from the network.
-- **Pitfalls**: Exposing the Private Key instead of the View Key.
-
-## 🛡️ 11. SharedArrayBuffer & Browser Isolation
-- **Definition**: A browser security feature required for multithreaded WASM.
-- **How to Use**: Must set COOP and COEP headers.
-- **Code Example**: `Cross-Origin-Opener-Policy: same-origin`.
-- **AI Logic**: If headers are missing, the Aleo SDK will crash on proof generation.
-- **Pitfalls**: Forgetting to register the `coi-serviceworker` on mobile.
-
-## 📡 12. Remote Proving API
-- **Definition**: Offloading ZK-synthesis to a backend server.
-- **How to Use**: Solve browser memory limits or isolation issues.
-- **Code Example**: `POST /compile-deploy { leoCode: "..." }`.
-- **AI Logic**: Generate the unsigned transaction on the server; sign it on the client.
-- **Pitfalls**: Sending the private key to the server (Never do this).
-
-## 🔋 13. Hardware-Aware initThreadPool
-- **Definition**: Tuning the number of worker threads based on device RAM.
-- **How to Use**: Prevent browser tab crashes on low-end mobile devices.
-- **Code Example**: `if (mem < 4) initThreadPool(1);`.
-- **AI Logic**: Check `navigator.deviceMemory` before starting workers.
-- **Pitfalls**: Setting high thread counts on mobile Safari.
-
-## 📦 14. ProgramManager (SDK Core)
-- **Definition**: The main class for interacting with Aleo programs.
-- **How to Use**: Use for deployments, executions, and queries.
-- **Code Example**: `new ProgramManager(endpoint, keyProvider, recordProvider)`.
-- **AI Logic**: It orchestrates the entire lifecycle of a transaction.
-- **Pitfalls**: Not setting the Account before calling `execute`.
-
-## 🔍 15. Record Discovery (SDK)
-- **Definition**: The process of finding unspent records on the network.
-- **How to Use**: Query the API for records belonging to a specific address.
-- **Code Example**: `programManager.networkClient.getRecords(address)`.
-- **AI Logic**: Filter records by `spent` status and program name.
-- **Pitfalls**: Using a spent record will cause a "Double Spend" error.
-
-## 🔌 16. Wallet Adapter (Universal Hook)
-- **Definition**: A unified interface for multiple Aleo wallets.
-- **How to Use**: Integrate wallets like Leo, Puzzle, and Fox into React apps.
-- **Code Example**: `const { connect, publicKey } = useWallet();`.
-- **AI Logic**: Use the adapter to request signatures without handling private keys.
-- **Pitfalls**: Assuming all wallets support the same feature set.
-
-## 💸 17. The Namespace Cost Trap
-- **Definition**: A 10+ credit fee for programs with names shorter than 10 characters.
-- **How to Use**: Always name your programs with 10 or more characters.
-- **Code Example**: `voting_v1_vibe_dev.aleo` (20 chars).
-- **AI Logic**: Use `optimizeProgramName` utility to ensure names are long enough.
-- **Pitfalls**: Deploying a 5-char name and losing all testnet credits.
-
-## 📈 18. UTXO Fan-out (Scaling)
-- **Definition**: Splitting one large credit record into multiple smaller ones.
-- **How to Use**: Enable parallel transactions from a single account.
-- **Code Example**: `credits.aleo/split(record, 10u64)`.
-- **AI Logic**: Use this to avoid "Record Contention" when making 250+ calls.
-- **Pitfalls**: Too many records can slow down wallet synchronization.
-
-## 💎 19. ARC-20 Token Standard
-- **Definition**: The private/public fungible token standard for Aleo.
-- **How to Use**: Implement transfers, joins, and splits for your assets.
-- **Code Example**: `record Token { owner: address, amount: u64 }`.
-- **AI Logic**: Ensure `split` logic correctly maintains the total supply.
-- **Pitfalls**: Forgetting to update the public mapping in `transfer_public_to_private`.
-
-## 🖼️ 20. ARC-721 NFT Standard
-- **Definition**: The non-fungible token standard.
-- **How to Use**: Store unique metadata in records or mappings.
-- **Code Example**: `record NFT { owner: address, data: field }`.
-- **AI Logic**: Use the `data` field to store a hash of the NFT metadata.
-- **Pitfalls**: Not checking for NFT uniqueness during the minting process.
-
-## 🗳️ 21. Multi-Signature Protocols
-- **Definition**: Requiring multiple approvals to execute a transaction.
-- **How to Use**: Secure high-value DAO treasuries.
-- **Code Example**: `mapping approvals: field => u8`.
-- **AI Logic**: Use a mapping of transaction hashes to count valid signatures.
-- **Pitfalls**: Not implementing a way to revoke a signature.
-
-## 🏢 22. Program Upgradability (Proxy Pattern)
-- **Definition**: Using a stable proxy contract that points to mutable logic.
-- **How to Use**: Update dApp logic without changing the user-facing address.
-- **Code Example**: `let logic_addr: address = Mapping::get(config, 1u8);`.
-- **AI Logic**: The proxy should be minimal; the logic program does the heavy lifting.
-- **Pitfalls**: Replay attacks if the proxy doesn't manage nonces correctly.
-
-## ⚡ 23. Gas Optimization: Priority Fees
-- **Definition**: Extra credits paid to validators for faster inclusion.
-- **How to Use**: Use high priority fees during network congestion.
-- **Code Example**: `--priority-fees 1000000`.
-- **AI Logic**: Priority fees are essential for dApps that require low latency.
-- **Pitfalls**: Setting fees too low and having transactions stuck in the mempool.
-
-## 🧪 24. Formal Verification Assertions
-- **Definition**: Mathematical checks built into the Leo language.
-- **How to Use**: Enforce state invariants and prevent logic errors.
-- **Code Example**: `assert_eq(total, a + b);`.
-- **AI Logic**: Use `assert` for every critical security boundary.
-- **Pitfalls**: Relying on client-side validation instead of on-chain assertions.
-
-## 🔗 25. Cross-Chain Bridge Logic
-- **Definition**: Transferring assets between Aleo and other blockchains.
-- **How to Use**: Lock assets on Ethereum; mint wrapped tokens on Aleo via ZK-proofs.
-- **Code Example**: `verify_ethereum_proof(proof_record)`.
-- **AI Logic**: The bridge must be bidirectional and prove "Burn" events.
-- **Pitfalls**: Centralized relayers being a single point of failure.
-
-## 🆔 26. zkKYC (Identity Privacy)
-- **Definition**: Proving attributes (e.g., "Age > 18") without revealing the identity.
-- **How to Use**: Compliance for DeFi while maintaining user anonymity.
-- **Code Example**: `assert(birth_year < 2006u32);`.
-- **AI Logic**: The issuer signs the record; the user generates the proof.
-- **Pitfalls**: The issuer knowing too much about the user's on-chain activity.
-
-## 🎲 27. Secure Randomness (VDFs)
-- **Definition**: Verifiable Delay Functions for unbiased random numbers.
-- **How to Use**: Use for fair lottery or gaming dApps.
-- **Code Example**: `BHP256::hash_to_field(seed + block.height)`.
-- **AI Logic**: Don't use block hashes alone; they can be manipulated by miners.
-- **Pitfalls**: Predictable seeds leading to exploit.
-
-## 📦 28. Leo Package Management
-- **Definition**: Managing dependencies between Leo programs.
-- **How to Use**: Import official programs like `credits.aleo`.
-- **Code Example**: `import credits.aleo;`.
-- **AI Logic**: Specify exact versions in `program.json` for reproducible builds.
-- **Pitfalls**: Importing incompatible versions of the same library.
-
-## 🐛 29. AVM Tracing & Debugging
-- **Definition**: Reading Aleo Instruction files to find logic errors.
-- **How to Use**: Debug when `leo test` passes but deployment fails.
-- **Code Example**: `cast r0 r1 into r2 as my_struct;`.
-- **AI Logic**: Trace register assignments to find where data is being corrupted.
-- **Pitfalls**: Misinterpreting the register-to-variable mapping.
-
-## 🏎️ 30. Parallel Multi-Worker Execution
-- **Definition**: Launching multiple execution processes in parallel.
-- **How to Use**: Achieve high transaction throughput.
-- **Code Example**: `script/worker-bulk.sh`.
-- **AI Logic**: Distribute the workload across multiple CPU cores.
-- **Pitfalls**: Overloading the RPC endpoint with too many simultaneous requests.
-
-## 📜 31. AleoBFT Consensus Nuances
-- **Definition**: The consensus mechanism used by Aleo validators.
-- **How to Use**: Understand when a transaction is considered "final".
-- **Code Example**: `leo query transaction <ID>`.
-- **AI Logic**: Wait for the `Accepted` status before updating the UI.
-- **Pitfalls**: Assuming a transaction is final as soon as it's broadcast.
-
-## 🌳 32. Merkle Tree Proofs
-- **Definition**: Proving data membership in a large set using a small proof.
-- **How to Use**: Whitelisting for NFTs or airdrops.
-- **Code Example**: `verify_merkle_proof(root, leaf, path)`.
-- **AI Logic**: Compute the leaf hash and climb the tree using siblings.
-- **Pitfalls**: Incorrect ordering of siblings in the proof array.
-
-## 📡 33. Transaction Polling (SDK)
-- **Definition**: Periodically checking the status of a pending transaction.
-- **How to Use**: Provide real-time feedback to the user.
-- **Code Example**: `while (status !== "Accepted") { ... }`.
-- **AI Logic**: Implement exponential backoff to avoid hitting rate limits.
-- **Pitfalls**: Infinite loops if a transaction is silently dropped from the mempool.
-
-## 🔢 34. Record Nonces & Determinism
-- **Definition**: The unique value that makes every record distinct.
-- **How to Use**: Ensure that two identical records have different serial numbers.
-- **Code Example**: `let nonce: field = Record::nonce(r);`.
-- **AI Logic**: Nonces are generated by the VM; you cannot set them manually.
-- **Pitfalls**: Trying to manually manipulate nonces in tests.
-
-## 🛠️ 35. Serial Number Derivation
-- **Definition**: The unique ID of a spent record.
-- **How to Use**: The network tracks these to prevent double-spending.
-- **Code Example**: `SN = BHP256(ViewKey, Nonce)`.
-- **AI Logic**: Only the View Key holder can calculate the SN.
-- **Pitfalls**: Leaking the SN early, allowing others to track your spending.
-
-## 🏷️ 36. BHP Domain Separation
-- **Definition**: Adding prefixes to hashes to prevent cross-protocol collisions.
-- **How to Use**: Ensure that a hash for a vote can't be reused as a hash for a bid.
-- **Code Example**: `BHP256::hash_to_field(data + 1field)`.
-- **AI Logic**: Use different "domains" (field constants) for different dApp actions.
-- **Pitfalls**: Hash collisions across different parts of the program.
-
-## 🚀 37. Poseidon Hashing Optimization
-- **Definition**: A ZK-friendly hash function.
-- **How to Use**: Use inside transitions to save gates.
-- **Code Example**: `Poseidon2::hash_to_field(data)`.
-- **AI Logic**: 10x more efficient than BHP for internal circuit math.
-- **Pitfalls**: Using Poseidon for external IDs where BHP is expected.
-
-## 🚧 38. Gate Limit Management (1M)
-- **Definition**: The maximum number of constraints per transition.
-- **How to Use**: Split complex programs into multiple transitions.
-- **Code Example**: `transition part_1() ... transition part_2()`.
-- **AI Logic**: Always check the gate count after `leo build`.
-- **Pitfalls**: Reaching the limit and being unable to deploy.
-
-## 🔄 39. Recursive Proof Batching
-- **Definition**: Verifying a proof within another proof.
-- **How to Use**: Compress 100 transactions into a single on-chain proof.
-- **Code Example**: `verify_proof(proof_A, inputs_A)`.
-- **AI Logic**: This is the key to Aleo's extreme scalability.
-- **Pitfalls**: High synthesis time for the recursive circuit.
-
-## 💰 40. Program Credit Verification
-- **Definition**: Checking if a contract has enough credits to pay for its own finalize blocks.
-- **How to Use**: Prevent dApp downtime due to lack of funds.
-- **Code Example**: `get credits.aleo/account[my_addr]`.
-- **AI Logic**: The dApp owner must periodically top up the contract address.
-- **Pitfalls**: Transactions failing because the program is "broke".
-
-## 🔑 41. Ciphertext vs Plaintext Management
-- **Definition**: Handling data before and after ZK-encryption.
-- **How to Use**: Plaintext is for local compute; Ciphertext is for on-chain storage.
-- **Code Example**: `let encrypted = encrypt(data, viewKey);`.
-- **AI Logic**: Never store plaintext in a mapping.
-- **Pitfalls**: Accidentally logging plaintext record data in the browser console.
-
-## 🖋️ 42. Ed25519 Message Signing
-- **Definition**: The standard signature scheme for Aleo accounts.
-- **How to Use**: Verify user identity without a transaction.
-- **Code Example**: `wallet.signMessage(msg)`.
-- **AI Logic**: Use this for off-chain login or API authentication.
-- **Pitfalls**: Signing raw data without a prefix (vulnerable to replay).
-
-## 🏛️ 43. Large Deployment Splitting
-- **Definition**: Breaking a massive Leo program into smaller libraries.
-- **How to Use**: Circumvent the 1M gate limit for complex dApps.
-- **Code Example**: `import library_v1.aleo;`.
-- **AI Logic**: Move utility logic into separate programs.
-- **Pitfalls**: Circular dependencies between programs.
-
-## 🔍 44. Local vs Network Record Scan
-- **Definition**: Where to look for user assets.
-- **How to Use**: Local is fast; Network is fresh.
-- **Code Example**: `wallet.getRecords()`.
-- **AI Logic**: Always perform a network scan before a critical transaction.
-- **Pitfalls**: Desync between the local wallet and the actual chain state.
-
-## 💾 45. WASM Memory Flags (--max-memory)
-- **Definition**: Configuring the memory limit for the Aleo prover.
-- **How to Use**: Enable large circuit proving in Node.js.
-- **Code Example**: `NODE_OPTIONS="--max-old-space-size=4096"`.
-- **AI Logic**: Synthesis of large programs can consume 2GB+ of RAM.
-- **Pitfalls**: Out-of-memory crashes during `leo build`.
-
-## 🧪 46. Provable SDK Mocking
-- **Definition**: Simulating blockchain responses for unit testing.
-- **How to Use**: Test frontend logic without waiting for the network.
-- **Code Example**: `const mockProvider = { getRecords: () => [] };`.
-- **AI Logic**: Mocking is essential for fast CI/CD pipelines.
-- **Pitfalls**: Mock behavior drifting from actual network behavior.
-
-## 🧂 47. Record Salt Entropy
-- **Definition**: Randomness added to a record to hide its contents.
-- **How to Use**: Use a high-quality RNG for record creation.
-- **Code Example**: `salt: field = ChaCha::rand_field();`.
-- **AI Logic**: Salt makes identical data look different in ciphertext.
-- **Pitfalls**: Using a salt of `0field` makes the record vulnerable to analysis.
-
-## 👤 48. Admin Signature verification
-- **Definition**: Using a digital signature to authorize an action.
-- **How to Use**: Alternative to `self.caller` for cross-program calls.
-- **Code Example**: `verify_signature(msg, sig, pub_key)`.
-- **AI Logic**: Vital for "Meta-Transactions" where a third party pays the gas.
-- **Pitfalls**: Signature malleability if the hash function is weak.
-
-## 🛑 49. Multisig Approval Revocation
-- **Definition**: The ability for a multisig signer to withdraw their approval for a pending transaction.
-- **How to Use**: Prevent unwanted executions if the transaction details are contested.
-- **Code Example**: `Mapping::remove(approvals, vote_key);`.
-- **AI Logic**: Implement a `revoke_approval` transition that checks for existence before removal.
-- **Pitfalls**: Not checking if the transaction has already been executed.
-
-## 🆔 50. Identity Revocation (zkKYC)
-- **Definition**: Invalidating a previously issued zkKYC record.
-- **How to Use**: Handle users who no longer meet compliance requirements.
-- **Code Example**: `Mapping::set(revoked_ids, user_id, true);`.
-- **AI Logic**: The user must provide a proof that their ID is NOT in the revoked mapping.
-- **Pitfalls**: Leaking the user's ID in the revocation list (use hashes).
-
-## ⚓ 51. Data Anchoring for Oracles
-- **Definition**: Storing a cryptographic commitment to external data.
-- **How to Use**: Provide a baseline for ZK-proofs of off-chain facts.
-- **Code Example**: `Mapping::set(anchors, timestamp, merkle_root);`.
-- **AI Logic**: Use a trusted relayer to push anchors to the chain.
-- **Pitfalls**: Stale anchors leading to incorrect price data.
-
-## ✅ 52. Formal Verification of State Invariants
-- **Definition**: Proving that certain properties (e.g., total supply) never change unexpectedly.
-- **How to Use**: Prevent minting exploits in token contracts.
-- **Code Example**: `assert_eq(balance_before - amount, balance_after);`.
-- **AI Logic**: Always verify the "Conservation of Value" in every transition.
-- **Pitfalls**: Integer overflow/underflow if not using Leo's built-in checks.
-
-## 🔄 53. Replay Attack Prevention
-- **Definition**: Ensuring a signed message or transaction cannot be reused.
-- **How to Use**: Use unique nonces or nullifiers for every action.
-- **Code Example**: `assert(!Mapping::contains(nonces, used_nonce));`.
-- **AI Logic**: Every off-chain signature should include a target program ID and chain ID.
-- **Pitfalls**: Reusing nonces across different versions of the same contract.
-
-## 🏃 54. Front-running in Finalize Blocks
-- **Definition**: Exploiting the public nature of finalize inputs to act before the target.
-- **How to Use**: Use Commit-Reveal to hide the intent of a mapping update.
-- **Code Example**: `Mapping::set(commitments, caller, hash);`.
-- **AI Logic**: The reveal phase should only be possible after the commitment is mined.
-- **Pitfalls**: Short reveal windows allowing attackers to brute-force the input.
-
-## 💧 55. Data Leakage Prevention in Transitions
-- **Definition**: Preventing private data from being exposed through public inputs.
-- **How to Use**: Always declare sensitive data as `private` in transition signatures.
-- **Code Example**: `transition my_tx(private secret: field)`.
-- **AI Logic**: Public inputs are visible in the transaction object on the explorer.
-- **Pitfalls**: Passing a record's data into a public input field.
-
-## 🎭 56. Mocking Records for Advanced Testing
-- **Definition**: Creating synthetic records to test complex program states.
-- **How to Use**: Speed up the development of multi-stage dApps.
-- **Code Example**: `transition mint_test_record() -> my_record`.
-- **AI Logic**: Use helper transitions that are only available in the "test" build.
-- **Pitfalls**: Accidentally leaving "test" transitions in the production deployment.
-
-## 🧱 57. AVM Register Allocation
-- **Definition**: How the VM assigns CPU registers to Leo variables.
-- **How to Use**: Optimize code for lower proving time.
-- **Code Example**: `r0, r1, r2...` in `.aleo` files.
-- **AI Logic**: Reuse registers by limiting the scope of temporary variables.
-- **Pitfalls**: Register pressure leading to inefficient circuit synthesis.
-
-## 🧪 58. Varuna Proof Synthesis
-- **Definition**: The process of turning Aleo instructions into a ZK-proof.
-- **How to Use**: This is what the `ProgramManager` does during execution.
-- **Code Example**: `await programManager.execute(...)`.
-- **AI Logic**: Synthesis time is proportional to the number of gates.
-- **Pitfalls**: Synthesis failing due to insufficient WASM memory.
-
-## 🤝 59. Commitment Schemes (BHP vs Poseidon)
-- **Definition**: Methods for "locking" data into a hash.
-- **How to Use**: BHP for addresses; Poseidon for internal circuit states.
-- **Code Example**: `BHP256::commit_to_field(data, salt)`.
-- **AI Logic**: Use Poseidon to minimize the number of constraints (gates).
-- **Pitfalls**: Using a commitment scheme without a random salt.
-
-## 📏 60. Range Proofs in Leo
-- **Definition**: Proving a number is within a certain range without revealing it.
-- **How to Use**: Check for sufficient balance or age requirements.
-- **Code Example**: `assert(val >= 18u8 && val <= 100u8);`.
-- **AI Logic**: Range checks are natively handled by Leo assertions.
-- **Pitfalls**: Complex range logic increasing the gate count significantly.
-
-## 📐 61. Elliptic Curve Arithmetic
-- **Definition**: Performing math on points on the Edwards curve.
-- **How to Use**: Implement custom cryptographic primitives like stealth addresses.
-- **Code Example**: `let p: group = a * G + b * H;`.
-- **AI Logic**: Use the `group` type for curve points and `scalar` for exponents.
-- **Pitfalls**: Trying to perform division on group points (not possible).
-
-## 🔢 62. Scalar Field Operations
-- **Definition**: Performing arithmetic on the prime field elements.
-- **How to Use**: Direct ZK-circuit manipulation.
-- **Code Example**: `let f: field = (a + b) * c;`.
-- **AI Logic**: Fields are the fastest type for ZK-math.
-- **Pitfalls**: Forgetting that field operations are modulo the prime.
-
-## 📝 63. Program Metadata (program.json)
-- **Definition**: The configuration file for a Leo project.
-- **How to Use**: Define program ID, version, and dependencies.
-- **Code Example**: `"program": "my_app.aleo"`.
-- **AI Logic**: Always ensure the `program` field matches the `program` name in `main.leo`.
-- **Pitfalls**: Mismatched program IDs causing deployment failures.
-
-## 📡 64. Network Record Providers
-- **Definition**: Services that index and provide records for users.
-- **How to Use**: Enable dApps to find unspent records for their users.
-- **Code Example**: `new NetworkRecordProvider(account, client)`.
-- **AI Logic**: Use this to automate record selection during execution.
-- **Pitfalls**: The provider being out of sync with the latest blocks.
-
-## 🌐 65. Aleo Network Client (REST API)
-- **Definition**: The interface for interacting with an Aleo node.
-- **How to Use**: Query blocks, transactions, and mappings.
-- **Code Example**: `client.getLatestHeight()`.
-- **AI Logic**: Use the REST API to build custom explorers or indexing services.
-- **Pitfalls**: Hitting rate limits on public RPC endpoints.
-
-## 🔑 66. Private Key Derivation (BIP32/44)
-- **Definition**: Generating multiple Aleo accounts from a single seed.
-- **How to Use**: Hierarchical Deterministic (HD) wallets.
-- **Code Example**: `Account.fromSeed(mnemonic, path)`.
-- **AI Logic**: Follow the standard BIP44 path for Aleo (m/44'/125'/0'/0/i).
-- **Pitfalls**: Using a non-standard path, making it hard for other wallets to find the account.
-
-## 🔡 67. Bech32 Encoding for Addresses
-- **Definition**: The string format for Aleo addresses (`aleo1...`).
-- **How to Use**: Human-readable and error-detecting address format.
-- **Code Example**: `aleo1pq7gn8cry...`.
-- **AI Logic**: Always validate the checksum before sending credits.
-- **Pitfalls**: Treating the address as a raw hex string.
-
-## 🛡️ 68. On-Chain Proof Verification
-- **Definition**: Validators checking the validity of a submitted Varuna proof.
-- **How to Use**: This is the core of Aleo's security model.
-- **Code Example**: Handled automatically by the consensus nodes.
-- **AI Logic**: If the proof is invalid, the transaction is rejected immediately.
-- **Pitfalls**: Assuming the network will "figure out" a buggy circuit.
-
-## 🌌 69. Universal Setup (Powers of Tau)
-- **Definition**: The trusted setup required for the Varuna proof system.
-- **How to Use**: Enables the generation of succinct proofs for any circuit.
-- **Code Example**: Abstracted away from the developer by the SDK.
-- **AI Logic**: Aleo uses a universal setup, meaning developers don't need their own.
-- **Pitfalls**: Using outdated SRS (Structured Reference String) parameters.
-
-## ⏱️ 70. Succinctness and Verification Time
-- **Definition**: The property that proofs are small and fast to check regardless of circuit size.
-- **How to Use**: Allows Aleo to scale horizontally.
-- **Code Example**: Proof size is constant (~1KB).
-- **AI Logic**: Optimization should focus on proving time (client), not verification time (network).
-- **Pitfalls**: Thinking a larger program will cost more to verify on-chain.
-
-## 📦 71. Batch Proof Verification
-- **Definition**: Checking multiple proofs at once to save consensus time.
-- **How to Use**: Used by validators to process thousands of transactions per second.
-- **Code Example**: Internal validator logic.
-- **AI Logic**: This is why Aleo's TPS can exceed most other ZK-chains.
-- **Pitfalls**: A single invalid proof in a batch failing the entire batch (rare in Aleo).
-
-## 🔄 72. State Root Syncing
-- **Definition**: Keeping track of the latest global state of the blockchain.
-- **How to Use**: Verify that your local view matches the network.
-- **Code Example**: `client.getStateRoot()`.
-- **AI Logic**: Use the state root to verify Merkle proofs of on-chain data.
-- **Pitfalls**: Trying to verify a proof against an old state root.
-
-## 📡 73. Block Gossip Protocol
-- **Definition**: How nodes share new blocks across the peer-to-peer network.
-- **How to Use**: Part of the `snarkOS` implementation.
-- **Code Example**: Abstracted by the node software.
-- **AI Logic**: Latency in block gossip can lead to temporary forks.
-- **Pitfalls**: Nodes with poor connectivity falling behind the main chain.
-
-## 📥 74. Transaction Mempool Management
-- **Definition**: The waiting area for unconfirmed transactions.
-- **How to Use**: Monitor the mempool to see pending dApp actions.
-- **Code Example**: `client.getMempoolTransactions()`.
-- **AI Logic**: Higher priority fees get transactions out of the mempool faster.
-- **Pitfalls**: Mempool congestion causing long delays for zero-fee transactions.
+- **Implementation**: `inline function calc(a: u64) -> u64 { ... }`.
+- **AI Logic**: Use for reusable logic that doesn't need its own proof scope.
+- **Pitfalls**: Too many inlines can explode the circuit size if the logic is massive.
+
+### 7. Structs & Mappings
+- **Definition**: Custom data types and public key-value stores.
+- **Implementation**: `struct Info { id: u64 }`, `mapping counts: address => u32`.
+- **AI Logic**: Use structs for grouped data; use mappings for global, public status tracking.
+- **Pitfalls**: Mappings can only be updated in `finalize` blocks.
+
+---
+
+## 🔒 SECTION III: Privacy & Cryptography
+
+### 8. The Nullifier Pattern
+- **Definition**: Preventing double-spending of private records without revealing the record.
+- **Implementation**: Store the hash of a record's unique ID in a public mapping.
+- **AI Logic**: Check if `Mapping::contains(nullifiers, record_hash)` before proceeding.
+- **Pitfalls**: Not using a unique salt in the hash, making it vulnerable to dictionary attacks.
+
+### 9. Stealth Addresses
+- **Definition**: One-time destination addresses derived from a recipient's public key.
+- **Implementation**: $P = H(r * A) * G + A$ (Elliptic curve arithmetic).
+- **AI Logic**: Generate a random scalar `r` for every transaction to ensure recipient privacy.
+- **Pitfalls**: Recipient needs a View Key to "discover" funds sent to stealth addresses.
+
+### 10. Commit-Reveal
+- **Definition**: Submitting a hash (commitment) and revealing the data later.
+- **Implementation**: Phase 1: `mapping[user] = hash(vote)`. Phase 2: `reveal(vote)`.
+- **AI Logic**: Essential for fair voting/bidding to prevent front-running.
+- **Pitfalls**: Not adding a random `nonce` to the hash, allowing others to brute-force the vote.
+
+### 11. View Keys
+- **Definition**: Decryption-only keys that do not allow spending.
+- **Implementation**: Used in the SDK to decrypt records: `viewKey.decrypt(ciphertext)`.
+- **AI Logic**: Use for auditing or showing users their private history in a frontend.
+- **Pitfalls**: Storing View Keys in plaintext on a server; they should stay client-side.
+
+---
+
+## 🚀 SECTION IV: Environment & Scaling
+
+### 12. SharedArrayBuffer Fix
+- **Definition**: Enabling multithreading in browsers via COOP/COEP headers.
+- **Implementation**: Register `coi-serviceworker` in the app entry point.
+- **AI Logic**: Required for the Aleo Prover to work on mobile browsers.
+- **Pitfalls**: Without this, `initThreadPool` will crash the browser worker.
+
+### 13. Remote Proving API
+- **Definition**: Offloading ZK-synthesis to a backend.
+- **Implementation**: `POST /prove { code, inputs }` -> Returns unsigned transaction.
+- **AI Logic**: Use as a fallback for low-RAM mobile devices or restricted environments.
+- **Pitfalls**: Do not handle private keys on the proving server; only build the synthesis.
+
+### 14. Hardware-Aware Proving
+- **Definition**: Scaling worker threads based on device memory.
+- **Implementation**: `navigator.deviceMemory < 4 ? initThreadPool(1) : initThreadPool(4)`.
+- **AI Logic**: Prevents OOM (Out-of-Memory) crashes on mobile.
+- **Pitfalls**: Initializing too many threads on a single-core mobile CPU.
+
+---
+
+## 🔌 SECTION V: Wallet & SDK Deep-Dive
+
+### 15. The Universal Wallet Interface
+- **Definition**: The standard API for all Aleo wallets (Leo, Fox, Puzzle).
+- **Implementation**: `wallet.requestTransaction({ programId, functionName, inputs })`.
+- **AI Logic**: Always use the adapter's methods to ensure cross-wallet compatibility.
+- **Pitfalls**: Hardcoding logic for a specific wallet provider.
+
+### 16. requestRecords (Discovery)
+- **Definition**: Fetching a user's unspent records from the network.
+- **Implementation**: `const records = await wallet.requestRecords(programId)`.
+- **AI Logic**: Filter records by value to find the best candidate for a transaction fee.
+- **Pitfalls**: Fetching all records can be slow; use pagination or filters.
+
+### 17. signMessage (Identity)
+- **Definition**: Off-chain digital signatures for authentication.
+- **Implementation**: `const sig = await wallet.signMessage(data)`.
+- **AI Logic**: Use for passwordless login to dApp backends.
+- **Pitfalls**: Ensure the message includes a timestamp to prevent replay attacks.
+
+### 18. decrypt (Privacy)
+- **Definition**: Decrypting record content or general ciphertexts.
+- **Implementation**: `const plain = await wallet.decrypt(cipher)`.
+- **AI Logic**: Essential for displaying user-specific data (e.g., "Your Private Balance").
+- **Pitfalls**: Users must approve a "Decrypt" permission request in the wallet.
+
+---
+
+## 💸 SECTION VI: Deployment & Scaling
+
+### 19. Namespace Fee Avoidance
+- **Definition**: Aleo charges 10+ credits for program names < 10 characters.
+- **Implementation**: Use names like `freemium_voting_v1.aleo` (19 chars).
+- **AI Logic**: Always verify name length before suggesting a deployment name.
+- **Pitfalls**: Accidentally suggesting `vote.aleo` and costing the user 10 credits.
+
+### 20. UTXO Fan-out
+- **Definition**: Splitting one credit record into 50+ small ones.
+- **Implementation**: Recursive `credits.aleo/split` calls.
+- **AI Logic**: Essential for high-speed dApps making 250+ transactions.
+- **Pitfalls**: High fragmentation can make initial wallet sync very slow.
+
+---
+
+## 🛡️ SECTION VII: Advanced Security
+
+### 21. Admin Access Control
+- **Definition**: Restricting sensitive actions to authorized addresses.
+- **Implementation**: `assert_eq(self.caller, admin_address)`.
+- **AI Logic**: Every "Manager" or "Finalize" transition must have an owner check.
+- **Pitfalls**: Hardcoding the admin address instead of using a `mapping` for rotation.
+
+### 22. Replay Attack Protection
+- **Definition**: Ensuring an action can't be repeated by copying the proof.
+- **Implementation**: Include a `nonce` or `nullifier` in the mapping for every transaction.
+- **AI Logic**: If a user performs an action once, the program should "mark" it as done on-chain.
+- **Pitfalls**: Not checking the nonce in the `finalize` block.
+
+---
+
+## 💎 SECTION VIII: Standards & Patterns (23-48)
+
+### 23. ARC-20 (Private Tokens)
+- **Piece-by-Piece**: Records store balance. `transfer_private` spends and creates.
+- **AI Implementation**: Use a `mapping` for public supply and `records` for private.
+
+### 24. ARC-721 (NFTs)
+- **Piece-by-Piece**: Unique record per NFT. `data` field stores the metadata hash.
+- **AI Implementation**: Assert uniqueness during the minting transition.
+
+### 25. ZK-Oracles
+- **Piece-by-Piece**: Push signed data from off-chain. Transition verifies signature.
+- **AI Implementation**: Use `BHP256::hash_to_field` to verify oracle data.
+
+### 26. DAO Quorum
+- **Piece-by-Piece**: `mapping participants`. Finalize check: `participants >= min`.
+- **AI Implementation**: Only allow execution if the participation threshold is met.
+
+### 27. Recursive Proofs
+- **Piece-by-Piece**: Proof A verifies Proof B.
+- **AI Implementation**: Use for batching hundreds of actions into one block.
+
+### 28. Merkle Tree Membership
+- **Piece-by-Piece**: Climb tree: `hash(leaf, sibling)`. Match with root.
+- **AI Implementation**: Whitelist proof for airdrops or gated access.
+
+### 29. Gas Estimation
+- **Piece-by-Piece**: `Base Fee + (Priority * Congestion)`.
+- **AI Implementation**: Advise users to use higher fees for critical dApp state changes.
+
+### 30. Formal Verification (Static)
+- **Piece-by-Piece**: Leo compiler ensures no type errors.
+- **AI Implementation**: Use `assert` for all logic boundaries.
+
+### 31. Multi-Sig Approval
+- **Piece-by-Piece**: `mapping(tx_id => approvals)`.
+- **AI Implementation**: Increment approval count in `finalize`.
+
+### 32. Program Upgradability
+- **Piece-by-Piece**: Proxy contract -> Logic address.
+- **AI Implementation**: Only the proxy owner can update the logic address.
+
+### 33. Transaction Polling
+- **Piece-by-Piece**: `getTransaction` loop in JS.
+- **AI Implementation**: Update UI from "Proving" to "Mined" to "Accepted".
+
+### 34. Poseidon Optimization
+- **Piece-by-Piece**: Lower gate cost for internal hashes.
+- **AI Implementation**: Use Poseidon inside loops to stay under 1M gates.
+
+### 35. Double-Spend Prevention
+- **Piece-by-Piece**: Derived serial numbers prevent record reuse.
+- **AI Implementation**: Handled by the protocol, but dApps must track custom nullifiers.
+
+### 36. View Key Compliance
+- **Piece-by-Piece**: Selective disclosure for regulations.
+- **AI Implementation**: Provide an "Auditor" role with access to view keys.
+
+### 37. Ciphertext Handling
+- **Piece-by-Piece**: Never log or share `cipher` records.
+- **AI Implementation**: Only decrypt in the user's secure browser memory.
+
+### 38. Ed25519 vs BHP
+- **Piece-by-Piece**: Ed25519 for wallets; BHP for circuits.
+- **AI Implementation**: Convert Ed25519 pubkeys to BHP fields for on-chain checks.
+
+### 39. Circuit Splitting
+- **Piece-by-Piece**: Link multiple programs via `import`.
+- **AI Implementation**: Bypass the 1M gate limit for complex dApps.
+
+### 40. Record Salt Entropy
+- **Piece-by-Piece**: High-randomness fields to hide record values.
+- **AI Implementation**: Always use `ChaCha` or similar for salt generation.
+
+### 41. Identity Revocation
+- **Piece-by-Piece**: Issuer adds ID to a `revoked` mapping.
+- **AI Implementation**: Transition must prove ID is NOT in mapping.
+
+### 42. Secure Randomness (VDF)
+- **Piece-by-Piece**: Unbiased numbers for gaming.
+- **AI Implementation**: Combine block height with user-provided entropy.
+
+### 43. Multi-Core Proving
+- **Piece-by-Piece**: Distributing ZK-work across all CPU cores.
+- **AI Implementation**: Set `initThreadPool` to `hardwareConcurrency`.
+
+### 44. Memory Management (WASM)
+- **Piece-by-Piece**: Fixing 2GB browser limits.
+- **AI Implementation**: Advise using Node.js for massive program synthesis.
+
+### 45. Mocking for CI/CD
+- **Piece-by-Piece**: Synthetic blockchain environment for tests.
+- **AI Implementation**: Mock `credits.aleo` to test fee logic in PRs.
+
+### 46. Domain Separation
+- **Piece-by-Piece**: Preventing hash reuse across different app sections.
+- **AI Implementation**: Add a constant prefix (e.g., `1field`) to every hash.
+
+### 47. Data Anchoring
+- **Piece-by-Piece**: Merkle roots of off-chain data stored on-chain.
+- **AI Implementation**: Use for high-frequency oracle updates.
+
+### 48. Front-running Defense
+- **Piece-by-Piece**: Obfuscating Mapping update inputs.
+- **AI Implementation**: Use `commit_to_field` during the transition phase.
+
+---
+
+## 🔬 SECTION IX: Advanced Engineering Mastery (49-74)
+
+### 49. Multisig Approval Revocation
+- **Piece-by-Piece**: Removing a previous approval from the mapping.
+- **AI Implementation**: `Mapping::remove(approvals, voter)`.
+
+### 50. zkKYC Attribute Proofs
+- **Piece-by-Piece**: Proving "Age > 18" without revealing birthday.
+- **AI Implementation**: Use range checks on private birthdate inputs.
+
+### 51. Universal Setup Parameters
+- **Piece-by-Piece**: Understanding the SRS (Structured Reference String).
+- **AI Implementation**: Aleo's Varuna uses a universal setup; no per-app setup needed.
+
+### 52. Formal Verification of Invariants
+- **Piece-by-Piece**: Proving `sum(inputs) == sum(outputs)`.
+- **AI Implementation**: Ensure balance is always conserved in every mint/burn.
+
+### 53. Replay Attack Prevention
+- **Piece-by-Piece**: Ensuring unique nonces for every off-chain signature.
+- **AI Implementation**: Store `used_nonces` in an on-chain mapping.
+
+### 54. Merkle Tree Path Calculation
+- **Piece-by-Piece**: Generating siblings for a specific leaf index.
+- **AI Implementation**: Essential for verifying membership in the SDK.
+
+### 55. Block Gossip Latency
+- **Piece-by-Piece**: Handling temporary chain forks.
+- **AI Implementation**: Advise users to wait for 2-3 confirmations for high-value TXs.
+
+### 56. Mempool Management
+- **Piece-by-Piece**: Monitoring pending transactions for priority.
+- **AI Implementation**: Use the network client to check congestion levels.
+
+### 57. AVM Register Allocation
+- **Piece-by-Piece**: How snarkVM maps variables to `r0`, `r1`, etc.
+- **AI Implementation**: Minimize active variables to reduce memory pressure.
+
+### 58. Varuna Proof Synthesis
+- **Piece-by-Piece**: The mathematical process of creating the ZKP.
+- **AI Implementation**: Synthesis time is linear to the gate count.
+
+### 59. Scalar Field Arithmetic
+- **Piece-by-Piece**: Prime field operations ($mod P$).
+- **AI Implementation**: Fastest way to perform math in ZK.
+
+### 60. Elliptic Curve Edwards Form
+- **Piece-by-Piece**: The curve used for Aleo identities.
+- **AI Implementation**: Use for custom signature verification logic.
+
+### 61. Range Proofs (Bitwise)
+- **Piece-by-Piece**: Implementing range checks using bit-decomposition.
+- **AI Implementation**: Leo handles this natively via comparison operators.
+
+### 62. Dependency Versioning
+- **Piece-by-Piece**: Lock file management for Leo programs.
+- **AI Implementation**: Always specify exact versions in `program.json`.
+
+### 63. AVM Tracing
+- **Piece-by-Piece**: Stepping through bytecode to find bugs.
+- **AI Implementation**: Essential when high-level Leo logic behaves unexpectedly.
+
+### 64. Network Client REST API
+- **Piece-by-Piece**: Fetching block data via HTTP.
+- **AI Implementation**: Build custom dApp dashboards using the REST endpoint.
+
+### 65. Private Key Derivation (BIP32)
+- **Piece-by-Piece**: Master Seed -> Account Keys.
+- **AI Implementation**: Follow Aleo standard HD paths for wallet compatibility.
+
+### 66. Bech32 Error Detection
+- **Piece-by-Piece**: Checksums in Aleo addresses.
+- **AI Implementation**: Always validate addresses before initiating transfers.
+
+### 67. On-Chain Proof Verification
+- **Piece-by-Piece**: How validators check transition validity.
+- **AI Implementation**: Mathematical guarantee of correctness.
+
+### 68. Succinctness Constants
+- **Piece-by-Piece**: Constant verification time regardless of complexity.
+- **AI Implementation**: Explains why complex dApps are still fast to verify.
+
+### 69. Batch Verification
+- **Piece-by-Piece**: Processing multiple proofs in one block.
+- **AI Implementation**: Scale to thousands of transactions per block.
+
+### 70. State Root Syncing
+- **Piece-by-Piece**: Verifying local state against the network root.
+- **AI Implementation**: Required for SPV (Simple Payment Verification) clients.
+
+### 71. Cross-Program Import Rules
+- **Piece-by-Piece**: Visibility of structs across program boundaries.
+- **AI Implementation**: Shared types must be defined in the library.
+
+### 72. Storage (Mapping) Costs
+- **Piece-by-Piece**: Fees associated with persistent state updates.
+- **AI Implementation**: Minimize mapping writes to save on transaction fees.
+
+### 73. Record Consumption Speed
+- **Piece-by-Piece**: UTXO management for high-frequency users.
+- **AI Implementation**: Use public credits to avoid record locking.
+
+### 74. Global Consensus (AleoBFT)
+- **Piece-by-Piece**: Proof-of-Stake combined with Proof-of-Succinct-Work.
+- **AI Implementation**: The security backbone of the network.
 
 ---
 *This protocol serves as the definitive cognitive architecture for Aleo Engineering. Strictly adhere to these definitions to achieve flawless system integration.*
