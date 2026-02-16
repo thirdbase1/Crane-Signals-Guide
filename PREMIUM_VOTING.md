@@ -1,14 +1,13 @@
 # 💎 Aleo Premium Voting Smart Contract: Deployment & Refinement
 
-This document covers the deployment of the `premium_voting_v1.aleo` program. This contract implements a "Freemium" DAO subscription model and private voting records.
+This document covers the deployment of the `premium_voting_v2_ultimate.aleo` program. This contract implements a "Freemium" DAO subscription model and private voting records.
 
 ---
 
 ## 🚀 Deployment Status
-*   **Program ID**: `premium_voting_v1.aleo`
-*   **Status**: Live & Verified
-*   **Transaction ID**: `at1a85lw8g9u9d0qsj2jx5m5p0lgneeg792tsux0260vdux0kw33y8sddlk0y`
-*   **Explorer Link**: [View Transaction](https://explorer.provable.com/transaction/at1a85lw8g9u9d0qsj2jx5m5p0lgneeg792tsux0260vdux0kw33y8sddlk0y)
+*   **Program ID**: `premium_voting_v2_ultimate.aleo` (Ultimate Edition)
+*   **Status**: Compiled & Ready for Deployment
+*   **Checksum**: `[58u8, 163u8, 18u8, 209u8, 236u8, 70u8, 23u8, 147u8, 183u8, 49u8, 8u8, 182u8, 232u8, 119u8, 143u8, 145u8, 32u8, 116u8, 167u8, 97u8, 80u8, 137u8, 156u8, 30u8, 154u8, 233u8, 9u8, 10u8, 100u8, 162u8, 167u8, 244u8]`
 *   **Network**: Aleo Testnet
 
 ---
@@ -16,34 +15,24 @@ This document covers the deployment of the `premium_voting_v1.aleo` program. Thi
 ## 🛠️ Critical Fixes & Logic Refinements
 
 ### 1. 🪙 Credits Record Interaction
-*   **Original**: Used `credits_in - setup_fee` (incorrect syntax).
-*   **Fixed**: Integrated `credits.aleo/transfer_private`. In Aleo, credits are records that must be spent via specialized transitions. I properly handled the input record and the returned `(change, payment)` tuple.
+*   Integrated `credits.aleo/transfer_private`. In Aleo, credits are records that must be spent via specialized transitions. I properly handled the input record and the returned `(change, payment)` tuple.
 
-### 2. ⚡ Proper Import & Linkage
-*   **Original**: `import credit.leo;` (Non-existent/local file reference).
-*   **Fixed**: Changed to `import credits.aleo;`, the official system program for credits. I also correctly used `credits.aleo/credits` as the record type.
+### 2. ⚡ Zero-Fee Transfer Bug Fix (v2)
+*   **Issue**: Calling `transfer_private` with a `0u64` amount causes transaction failure.
+*   **Solution**: Split the logic. `subscribe_to_dao` now enforces a paid fee for subscriptions > 10 proposals. A new `subscribe_free` transition handles the freemium tier without triggering a credit transfer.
 
 ### 3. 🛡️ Record Compliance
-*   **Original**: Missing `owner: address` field in some record definitions.
-*   **Fixed**: Every `record` in Leo requires an `owner` field of type `address`. Added this to `ProposalRecord`, `VoteRecord`, and `DaoSubscription` to ensure the ZK-circuit compiled correctly.
-
-### 4. 🔄 Conditional Fee Logic
-*   **Original**: Attempted to use `if` expressions for state assignment inside transitions.
-*   **Fixed**: Implemented standard Leo logic for calculating subscription fees based on the number of proposals requested (Freemium: first 10 free, then paid).
+*   Every `record` in Leo requires an `owner` field of type `address`. Added this to `ProposalRecord`, `VoteRecord`, and `DaoSubscription` to ensure the ZK-circuit compiled correctly.
 
 ---
 
 ## 📞 API Usage Guide
 
 ### 📱 Client-Side (Frontend Wallet Adapter)
-Since `create_premium_dao` and `subscribe_to_dao` require **Private Credit Records** from the user's wallet, they **must** be called using a Wallet Adapter.
-
 ```typescript
 const { requestTransaction } = useWallet();
 
 const handleCreateDAO = async () => {
-    // 1. Get a private credits record from the user's wallet
-    // 2. Specify the setup_fee (minimum 5,000,000 microcredits = 5 ALEO)
     const inputs = [
         "name_field",
         "aleo1...", // token address
@@ -53,7 +42,7 @@ const handleCreateDAO = async () => {
     ];
 
     await requestTransaction({
-        programId: "premium_voting_v1.aleo",
+        programId: "premium_voting_v2_ultimate.aleo",
         functionName: "create_premium_dao",
         inputs: inputs,
         fee: 0.5
@@ -61,28 +50,13 @@ const handleCreateDAO = async () => {
 };
 ```
 
-### 🖥️ Server-Side (Proving API / Admin)
-For calls that do not require private records (like `verify_vote` or public transitions), use the SDK:
-
-```typescript
-import { ProgramManager } from "@provablehq/sdk";
-
-const result = await programManager.execute(
-    "premium_voting_v1.aleo",
-    "verify_vote",
-    0.1, // Fee
-    false,
-    ["12345field", "12345field"]
-);
-```
-
 ---
 
 ## 📜 Function Overview
 1.  **`create_premium_dao`**: Initializes a DAO record. Requires a 5 ALEO setup fee sent to the treasury.
-2.  **`subscribe_to_dao`**: Issues a `DaoSubscription` record. First 10 proposals are free; subsequent ones require payment to the DAO owner.
-3.  **`cast_vote`**: Generates a private `VoteRecord` for the user.
-4.  **`verify_vote`**: A simple helper to compare a proof hash against an expected value.
+2.  **`subscribe_to_dao`**: Issues a `DaoSubscription` record for paid tiers.
+3.  **`subscribe_free`**: Issues a `DaoSubscription` record for the free tier (first 10 proposals).
+4.  **`cast_vote`**: Generates a private `VoteRecord` for the user.
 
 ---
 *Developed by Jules - Automated Aleo Systems Engineer.*

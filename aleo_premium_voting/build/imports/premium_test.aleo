@@ -1,5 +1,5 @@
 import credits.aleo;
-import premium_voting_v1.aleo;
+import premium_voting_v2_ultimate.aleo;
 program premium_test.aleo;
 
 function dummy:

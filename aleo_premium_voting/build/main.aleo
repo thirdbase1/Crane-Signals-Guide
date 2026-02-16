@@ -1,5 +1,5 @@
 import credits.aleo;
-program premium_voting_v1.aleo;
+program premium_voting_v2_ultimate.aleo;
 
 record PremiumDAO:
     owner as address.private;
@@ -37,7 +37,7 @@ function create_premium_dao:
     output r8 as PremiumDAO.record;
     output r6 as credits.aleo/credits.record;
     output r7 as credits.aleo/credits.record;
-    output r9 as premium_voting_v1.aleo/create_premium_dao.future;
+    output r9 as premium_voting_v2_ultimate.aleo/create_premium_dao.future;
 
 finalize create_premium_dao:
     assert.eq true true;
@@ -58,7 +58,7 @@ function subscribe_to_dao:
     output r9 as DaoSubscription.record;
     output r7 as credits.aleo/credits.record;
     output r8 as credits.aleo/credits.record;
-    output r10 as premium_voting_v1.aleo/subscribe_to_dao.future;
+    output r10 as premium_voting_v2_ultimate.aleo/subscribe_to_dao.future;
 
 finalize subscribe_to_dao:
     assert.eq true true;
@@ -68,7 +68,7 @@ function subscribe_free:
     cast self.caller r0.owner self.caller 100800u32 true into r1 as DaoSubscription.record;
     async subscribe_free into r2;
     output r1 as DaoSubscription.record;
-    output r2 as premium_voting_v1.aleo/subscribe_free.future;
+    output r2 as premium_voting_v2_ultimate.aleo/subscribe_free.future;
 
 finalize subscribe_free:
     assert.eq true true;

@@ -1,6 +1,6 @@
 import credits.aleo;
 
-program premium_voting_v1.aleo {
+program premium_voting_v2_ultimate.aleo {
 
     @admin(address="aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl")
     async constructor() {}
