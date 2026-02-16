@@ -1,110 +1,167 @@
-# 🧠 AGENTS.md: The Ultimate Aleo Technical Protocol (Advanced Skill Guide)
+# 🧠 AGENTS.md: The Ultimate Aleo Technical Protocol (v2.0 - Exhaustive Guide)
 
 This document is the definitive technical "skill" manual for any AI agent working with the Aleo blockchain. It codifies the architecture, language, and interaction protocols required to build zero-error, privacy-preserving decentralized applications.
 
 ---
 
-## 🌎 1. Aleo Blockchain & Architecture
+## 🌎 1. Aleo Blockchain & Architecture Deep-Dive
 Aleo is a Layer 1 blockchain using **Zero-Knowledge Proofs (ZKP)** for privacy and scalability.
 
-- **AVM (Aleo Virtual Machine)**: Executes program logic.
-- **Record Model**: Private data objects. Spending a record consumes it and creates new ones.
-- **Async/Finalize**: Separation between off-chain proof generation (transition) and on-chain state update (finalize).
+- **AVM (Aleo Virtual Machine)**: Executes program logic. Programs are stored as bytecode on-chain but executed locally for proofs.
+- **Varuna Proof System**: The modern SNARK system used by Aleo for universal proofs. It allows for succinct verification of complex circuits.
+- **Record Model**: Private data objects. Every record has an `owner`, a `nonce`, and custom data.
+- **Async/Finalize**: Separation between off-chain proof generation (transition) and on-chain state update (finalize). Transitions are proved locally; Finalize logic is executed by every node.
 
 ---
 
-## ✍️ 2. Leo Language & Type System
+## ✍️ 2. Leo Language: Syntax, Types & Patterns
 ### Primitive Types & Literals
-| Type | Literal Format | Encoding Logic |
-| :--- | :--- | :--- |
-| **Address** | `aleo1...` | Bech32 encoded string. |
-| **u8** | `1u8` | 8-bit unsigned integer. |
-| **u64** | `100u64` | 64-bit unsigned integer (common for balances/fees). |
-| **field** | `123field` | Base unit of ZK arithmetic (~253 bits). |
-| **group** | `1group` | Elliptic curve points. |
-| **scalar** | `1scalar` | Multipliers for groups. |
-| **boolean**| `true`, `false`| Logical values. |
+| Type | Literal Format | Bit-Size | Notes |
+| :--- | :--- | :--- | :--- |
+| **Address** | `aleo1...` | - | Bech32 encoded string. |
+| **u8 / u16 / u32** | `1u8`, `1u16`, `1u32` | 8/16/32 | Standard unsigned integers. |
+| **u64 / u128** | `100u64`, `1u128` | 64/128 | Used for high-precision math and balances. |
+| **field** | `123field` | ~253 | Base unit of ZK arithmetic. Elements of the scalar field. |
+| **group** | `1group` | - | Points on the Edwards curve. `generator` is a common constant. |
+| **scalar** | `1scalar` | - | Used for group exponents. |
+| **boolean**| `true`, `false`| 1 | Logical values. |
 
-### Field Encoding Rules
-- **Prime reduction**: Fields are elements of the prime $p \approx 2^{253}$.
-- **Hex conversion**: To convert hex to field, use `BigInt("0x...")` and format as `BigInt.toString() + "field"`.
-- **Serialization**: Records are serialized as strings or JSON objects depending on the SDK level.
+### Advanced State Management
+1.  **Mappings**: Global state. `mapping name: key_type => value_type;`
+2.  **Structs**: Complex data grouping. `struct Data { id: u64, info: field }`
+3.  **Futures**: Essential for `async` transitions. They "wrap" the finalize call.
 
----
-
-## 🔌 3. Wallet Adapter API Reference
-### Library: `@provablehq/aleo-wallet-adaptor-react` / `core`
-
-#### Core Method Signatures:
-1.  **`requestRecords(program: string): Promise<Record[]>`**
-    *   Returns array of encrypted/unspent records.
-2.  **`requestTransaction(tx: AleoTransaction): Promise<string>`**
-    *   `AleoTransaction` fields: `address`, `programId`, `functionName`, `inputs[]`, `fee`, `privateFee`.
-    *   Returns the transaction ID (string).
-3.  **`signMessage(message: Uint8Array): Promise<Uint8Array>`**
-    *   Standard signing for authentication.
-4.  **`decrypt(ciphertext: string): Promise<string>`**
-    *   Decrypts local data using the private key.
-
-#### Wallet-Specific Nuances:
-- **Leo Wallet**: Full implementation. Supports bulk transactions.
-- **Shield Wallet**: High privacy, slightly slower record fetching.
-- **Puzzle Wallet**: Multi-chain support, requires specific `fee` formatting.
-- **Fox Wallet**: Optimized for mobile performance.
+### Accurate Coding Patterns
+- **Commit-Reveal**: Use `BHP256::hash_to_field(value)` to create a commitment. Reveal later by providing the original value + salt in a transition.
+- **Stealth Addresses**: Use `group` math (`r * G`) to derive unique one-time addresses for private transfers.
+- **Type Casting**: Use `cast r0 into r1 as TypeName;` or `r0 as TypeName;`
 
 ---
 
-## 🔍 4. Contract Inspector & Parsing Logic
-AI should parse `.aleo` (AVM) files to auto-detect requirements:
+## 🔌 3. Wallet Adapter API & Nuances
+### Library: `@provablehq/aleo-wallet-adaptor-react`
 
-### Extraction Patterns:
-- **Functions**: `function ([a-z0-9_]+):`
-- **Visibility**: Detect `.private` or `.public` modifiers on inputs/outputs.
-- **Inputs**: `input r(\d+) as ([a-z0-9\./]+)\.(public|private);`
-- **Mappings**: `mapping ([a-z0-9_]+):` detects global state requirements.
+#### Core API Methods
+1.  **`connect(adapterId: string, network: Network, permission: Permission): Promise<void>`**
+2.  **`requestRecords(program: string): Promise<Record[]>`**: Critical for finding unspent "credits" or "tokens".
+3.  **`requestTransaction(tx: AleoTransaction): Promise<string>`**: The primary way to execute transition functions.
+4.  **`requestExecution(request: AleoExecution): Promise<string>`**: Specifically for executing a program with public or private inputs.
+5.  **`decrypt(ciphertext: string): Promise<string>`**: Returns the plaintext of an encrypted record field or message.
+
+#### 🛡 Wallet-Specific Nuances & Identifiers
+| Wallet Name | Adapter ID | Key Strengths | Specific Requirements / "Wants" |
+| :--- | :--- | :--- | :--- |
+| **Leo Wallet** | `LeoWallet` | Dev-friendly, stable. | Standard implementation. Supports bulk transaction requests. |
+| **Shield Wallet**| `ShieldWallet`| Max privacy focus. | Higher latency on `requestRecords`. Requires strict permission scopes. |
+| **Puzzle Wallet**| `PuzzleWallet`| Multi-chain/asset. | **Return Format**: Often returns JSON-stringified records that must be manually parsed. |
+| **Fox Wallet** | `FoxWallet` | Mobile optimization. | Highly sensitive to WASM thread count (`initThreadPool`). |
+| **Soter Wallet** | `SoterWallet` | Enterprise security. | Strict input validation; fails early if suffixes (`u64`) are missing. |
 
 ---
 
-## 🧪 5. Input Formatting Utilities
-### Auto-Generation Strategy:
-1.  Parse contract for `input rN`.
-2.  Map frontend state to the ordered input array.
-3.  **Validation**:
-    - Ensure all numbers have `u8`/`u64`/etc suffixes.
-    - Ensure all strings are valid `address` or `field`.
-    - Wrap complex types in `"` if passing via JSON RPC.
+## 🚀 4. High-Performance Proving (The Browser Bypass)
+ZK-proving is heavy. To ensure stability:
+
+### 1. Memory Management
+Browsers often kill WASM workers if they exceed 2GB-4GB.
+- **Solution**: Use `initThreadPool(1)` for low-memory environments (mobile) or `initThreadPool(os.cpus().length)` for desktops.
+
+### 2. Remote Proving (API Logic)
+If a client-side prove fails:
+1.  Frontend sends Leo code/inputs to a Node.js backend.
+2.  Backend uses `@provablehq/sdk` to run `buildDeploymentTransaction` or `execute`.
+3.  Backend returns the **Unsigned Transaction Object**.
+4.  Frontend calls `wallet.requestTransaction(unsignedTx)` for final signature.
+
+---
+
+## 🔍 5. Contract Inspector & Input Formatting
+### Automated Parsing Logic
+AI agents should look for these patterns in `.aleo` files:
+- **Visibility**: `.public` (on-chain) vs `.private` (local proof only).
+- **Inputs**: `input r0 as credits.aleo/credits.record;` -> Requires fetching an unspent record first.
+- **Fee Suffix**: Credits are always `u64`. Example: `1.5 ALEO = 1500000u64`.
+
+### Formatting & Encoding Utilities
+```typescript
+/**
+ * Auto-formats values for Aleo transitions
+ */
+export const formatAleoInput = (val: any, type: string) => {
+  if (type === 'u64') return `${val}u64`;
+  if (type === 'field') {
+      // Logic for prime reduction (mod 2^253 approx)
+      const fieldVal = BigInt(val) % BigInt("211759232530467144869309935101340117170");
+      return `${fieldVal}field`;
+  }
+  if (type === 'address') return val;
+  return val;
+}
+
+/**
+ * Encodes Hex to Field
+ */
+export const hexToField = (hex: string) => {
+    return BigInt("0x" + hex.replace("0x", "")).toString() + "field";
+}
+```
 
 ---
 
 ## 🪲 6. Wallet Transaction Debugger
-### Common Errors & Required Fixes:
-- **`INVALID_PARAMS`**: Usually a mismatch in input count.
-  - *Check*: Contract has 4 inputs, but frontend sent 3.
-- **`USER_REJECTED` (4001)**: User cancelled.
-  - *Fix*: Re-trigger the UI or notify the user.
-- **`INSUFFICIENT_CREDITS`**: Wallet has < 12 credits for a short-name program deployment.
-  - *Fix*: Rename to > 10 characters or fund the wallet.
-- **`PROGRAM_NOT_FOUND`**: Deployment failed or network mismatch (e.g., trying Testnet program on Mainnet).
+### Common Error Patterns
+- **`4001` (User Rejected)**: Handled via `try/catch`.
+- **`INVALID_PARAMS`**: Check if an input marked `private` in Leo is being passed as a `public` field in the SDK.
+- **`INSUFFICIENT_CREDITS`**: User has enough balance but NO single unspent record large enough. **Fix**: Advise user to "Join" (Merge) their records in the wallet.
+- **`NAMESPACE_FEE`**: Happens when program name is < 10 chars. **Fix**: Expand name length.
 
 ---
 
-## 🛠 7. Interaction Code Database
+## 🛠 7. Interaction Code Examples
 
-### Record Fetching & Filtering:
+### Fetch & Filter Records
 ```typescript
-const records = await requestRecords("credits.aleo");
-const unspent = records.filter(r => !r.spent);
+const { requestRecords } = useWallet();
+const getUnspent = async (program: string) => {
+    const records = await requestRecords(program);
+    return records.filter(r => !r.spent); // Essential filter
+};
 ```
 
-### High-Volume Transaction Call:
+### Call a Deployed Contract
 ```typescript
-const tx = await requestTransaction({
-    programId: "voting_v1.aleo",
-    functionName: "cast_private_vote",
-    inputs: ["1u64", "123field", "456field", records[0]],
-    fee: 0.1
+const txId = await requestTransaction({
+    programId: "premium_voting_v1.aleo",
+    functionName: "create_premium_dao",
+    inputs: [
+        "12345field", // Name hashed
+        "aleo1...", // token address
+        "1000u64", // fee
+        records[0], // Record required for fee payment
+        "5000000u64" // Setup fee
+    ],
+    fee: 0.5
 });
 ```
 
+### Multi-Wallet Detection & Switching
+```typescript
+const { wallets, select } = useWallet();
+
+// Dynamically list and select wallets
+const handleSwitch = (name: string) => {
+    const wallet = wallets.find(w => w.adapter.name === name);
+    if (wallet) select(wallet.adapter.name);
+};
+```
+
 ---
-*This document acts as the technical nervous system for the Aleo AI agent. Follow it to maintain 100% operational accuracy.*
+
+## ⚡ 8. High-Speed Interaction (The Throughput Strategy)
+To achieve high transaction volume (300+ calls) without failing:
+1.  **Public Fee Mapping**: Send credits to the `credits.aleo` program's public mapping. This avoids UTXO record contention.
+2.  **Stateless Proofs**: Design functions that don't depend on global state if possible, allowing for mass-parallel proof generation.
+3.  **Prover Delegation**: For high-speed apps, use the backend API (`server/aleo-prover.ts`) to pre-generate unsigned transactions in parallel batches of 50+.
+
+---
+*This protocol serves as the definitive cognitive architecture for Aleo AI Agents. Strictly adhere to these definitions to achieve flawless system integration.*
