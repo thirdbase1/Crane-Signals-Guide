@@ -1,4 +1,4 @@
-import { Account, ProgramManager, NetworkRecordProvider, AleoNetworkClient, AleoKeyProvider } from "@aleohq/sdk";
+import { Account, ProgramManager, NetworkRecordProvider, AleoNetworkClient, AleoKeyProvider } from "@provablehq/sdk";
 import fs from "fs";
 import path from "path";
 
