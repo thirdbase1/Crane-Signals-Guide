@@ -2,7 +2,9 @@ import credits.aleo;
 
 program freemium_voting_v1.aleo {
 
+    // Platform Constants
     const VOTE_FEE: u64 = 100000u64; // 0.1 ALEO
+    const PLATFORM_ADMIN: address = aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
 
     record EncryptedVote {
         owner: address,
@@ -25,17 +27,29 @@ program freemium_voting_v1.aleo {
         voter: address,
     }
 
+    // On-Chain State
     mapping proposals: u64 => ProposalData;
     mapping voted: field => bool;
     mapping has_used_free_vote: address => bool;
 
-    // Create a new proposal
+    // Transition: Create Proposal
+    // Requirement: Anyone can create a proposal for a small fee? Or only Admin?
+    // User choice: Let's allow anyone to create for 1 ALEO to prevent spam.
     async transition create_proposal(
         public proposal_id: u64,
         public title_hash: field,
         public duration_blocks: u64,
-    ) -> Future {
-        return finalize_create_proposal(proposal_id, self.caller, title_hash, duration_blocks);
+        private credits_in: credits.aleo/credits,
+    ) -> (credits.aleo/credits, credits.aleo/credits, Future) {
+
+        let fee: u64 = 1000000u64; // 1.0 ALEO
+        let (change, payment): (credits.aleo/credits, credits.aleo/credits) = credits.aleo/transfer_private(
+            credits_in,
+            PLATFORM_ADMIN,
+            fee
+        );
+
+        return (change, payment, finalize_create_proposal(proposal_id, self.caller, title_hash, duration_blocks));
     }
 
     async function finalize_create_proposal(
@@ -59,7 +73,8 @@ program freemium_voting_v1.aleo {
         Mapping::set(proposals, proposal_id, proposal_data);
     }
 
-    // Cast a FREE vote (Only once per address across all proposals)
+    // Transition: Cast FREE Vote
+    // Piece-by-piece logic: Verify lifetime usage, then verify proposal participation.
     async transition cast_vote_free(
         public proposal_id: u64,
         private vote_hash: field,
@@ -84,7 +99,7 @@ program freemium_voting_v1.aleo {
         let already_used: bool = Mapping::get_or_use(has_used_free_vote, voter, false);
         assert(!already_used);
 
-        // 2. Ensure user hasn't voted on THIS proposal
+        // 2. Ensure user hasn't voted on this specific proposal
         let has_voted: bool = Mapping::get_or_use(voted, vote_key, false);
         assert(!has_voted);
 
@@ -92,7 +107,8 @@ program freemium_voting_v1.aleo {
         Mapping::set(has_used_free_vote, voter, true);
     }
 
-    // Cast a PAID vote (Subsequent votes or if free vote already used)
+    // Transition: Cast PAID Vote
+    // Piece-by-piece logic: Deduct fee, then verify proposal participation.
     async transition cast_vote_paid(
         public proposal_id: u64,
         private vote_hash: field,
@@ -100,12 +116,9 @@ program freemium_voting_v1.aleo {
         private credits_in: credits.aleo/credits,
     ) -> (EncryptedVote, credits.aleo/credits, credits.aleo/credits, Future) {
 
-        let treasury: address = aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
-
-        // Deduct fee
         let (change, transfer_record): (credits.aleo/credits, credits.aleo/credits) = credits.aleo/transfer_private(
             credits_in,
-            treasury,
+            PLATFORM_ADMIN,
             VOTE_FEE
         );
 
@@ -129,7 +142,8 @@ program freemium_voting_v1.aleo {
         Mapping::set(voted, vote_key, true);
     }
 
-    // Finalize a proposal (Creator only)
+    // Transition: Finalize Proposal
+    // Piece-by-piece logic: Enforce creator-only access and update global state.
     async transition finalize_proposal(public proposal_id: u64) -> Future {
         return finalize_finalize_proposal(proposal_id, self.caller);
     }

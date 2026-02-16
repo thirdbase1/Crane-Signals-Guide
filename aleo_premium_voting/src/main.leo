@@ -3,11 +3,13 @@ import credits.aleo;
 program premium_voting_v2.aleo {
 
     const PLATFORM_FEE: u64 = 5000000u64; // 5 ALEO for DAO creation
+    const PLATFORM_ADMIN: address = aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
 
     struct DaoInfo {
         name: field,
         token_address: address,
         subscription_fee: u64,
+        created_block: u32,
     }
 
     record ProposalRecord {
@@ -27,10 +29,11 @@ program premium_voting_v2.aleo {
     }
 
     // Platform State
-    mapping platform_admins: address => bool;
+    mapping admins: address => bool;
     mapping daos: address => DaoInfo;
 
-    // Create premium DAO (Publicly registered)
+    // Transition: Create Premium DAO
+    // Piece-by-piece: Deduct 5 ALEO platform fee and register DAO info publicly.
     async transition create_premium_dao(
         public name: field,
         public token_address: address,
@@ -38,11 +41,9 @@ program premium_voting_v2.aleo {
         private credits_in: credits.aleo/credits
     ) -> (credits.aleo/credits, credits.aleo/credits, Future) {
 
-        let treasury: address = aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
-
         let (change, payment): (credits.aleo/credits, credits.aleo/credits) = credits.aleo/transfer_private(
             credits_in,
-            treasury,
+            PLATFORM_ADMIN,
             PLATFORM_FEE
         );
 
@@ -50,19 +51,30 @@ program premium_voting_v2.aleo {
             name: name,
             token_address: token_address,
             subscription_fee: subscription_fee,
+            created_block: 0u32, // placeholder
         };
 
         return (change, payment, finalize_create_premium_dao(self.caller, info));
     }
 
     async function finalize_create_premium_dao(public owner: address, public info: DaoInfo) {
-        // Ensure DAO doesn't already exist for this owner
+        // 1. Ensure DAO doesn't already exist for this owner
         let exists: bool = Mapping::contains(daos, owner);
         assert(!exists);
-        Mapping::set(daos, owner, info);
+
+        // 2. Set actual creation block
+        let info_final: DaoInfo = DaoInfo {
+            name: info.name,
+            token_address: info.token_address,
+            subscription_fee: info.subscription_fee,
+            created_block: block.height,
+        };
+
+        Mapping::set(daos, owner, info_final);
     }
 
-    // Create a proposal (Only registered DAO owners)
+    // Transition: Create Proposal
+    // Piece-by-piece: Only registered DAO owners can create proposals.
     async transition create_proposal_for_dao(
         public proposal_id: field,
         public title: field
@@ -73,7 +85,7 @@ program premium_voting_v2.aleo {
             proposal_id: proposal_id,
             dao_owner: self.caller,
             title: title,
-            created_at: 0u32,
+            created_at: 0u32, // placeholder
         };
 
         return (proposal, finalize_create_proposal_dao(self.caller));
@@ -85,7 +97,8 @@ program premium_voting_v2.aleo {
         assert(exists);
     }
 
-    // Subscribe to DAO (Paid)
+    // Transition: Subscribe (Paid)
+    // Piece-by-piece: Automated fee calculation based on duration.
     async transition subscribe_paid(
         public dao_owner: address,
         public duration_blocks: u32,
@@ -114,12 +127,13 @@ program premium_voting_v2.aleo {
     }
 
     async function finalize_subscribe_paid(public dao_owner: address, public dao_fee: u64) {
-        // Verify DAO exists and fee matches
+        // Verify DAO exists and fee matches current registry
         let info: DaoInfo = Mapping::get(daos, dao_owner);
         assert_eq(info.subscription_fee, dao_fee);
     }
 
-    // Subscribe to DAO (Free Trial)
+    // Transition: Subscribe (Free Trial)
+    // Piece-by-piece: 1000 block free trial for new users.
     async transition subscribe_free(
         public dao_owner: address,
     ) -> (DaoSubscription, Future) {
