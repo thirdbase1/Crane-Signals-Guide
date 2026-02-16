@@ -1,10 +1,6 @@
 import credits.aleo;
 
-program voting_v1.aleo {
-
-    // The @admin attribute makes the program upgradeable by the specified address.
-    @admin(address="aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl")
-    async constructor() {}
+program voting_v1_vibe_coding.aleo {
 
     const VOTE_FEE: u64 = 100000u64; // 0.1 ALEO
 

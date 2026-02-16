@@ -18,7 +18,7 @@ export function optimizeProgramName(aiGeneratedName: string): string {
 
   // 2. Expand if too short (The "Free Tier" logic)
   if (baseName.length < 10) {
-    const suffix = "_vibe_master";
+    const suffix = "_vibe_coding";
     baseName = (baseName + suffix).substring(0, 20); // Keep it reasonable
   }
 
