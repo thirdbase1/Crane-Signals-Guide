@@ -379,4 +379,77 @@ This document is the absolute technical "brain" for any AI agent or senior engin
 - **AI Logic**: The security backbone of the decentralized network.
 
 ---
+
+## 🧠 SECTION X: Provable SDK Proving & Wallet Interaction Deep-Dive
+
+This section breaks down the exact lifecycle of a Zero-Knowledge proof and the step-by-step handshake between the Provable SDK and the Aleo Wallet.
+
+### 1. The Proving Lifecycle (Provable SDK)
+
+Proving on Aleo is a multi-stage process that moves from high-level Leo code to low-level cryptographic proofs.
+
+**A. Synthesis (The Blueprint Phase)**
+- **Definition**: Turning Leo instructions into a R1CS (Rank-1 Constraint System) circuit.
+- **SDK Implementation**: `programManager.synthesize(leoCode)`.
+- **Piece-by-Piece**:
+  1. The SDK reads the `.leo` file.
+  2. It maps variables to prime field elements.
+  3. It generates "Gates" for every operation (add, mult, hash).
+- **AI Logic**: This is the most CPU-intensive part. Always inform the user that "Generating Circuit" may take 5-30 seconds.
+- **Pitfall**: Synthesis fails if the Leo code has syntax errors or exceeds the 1M gate limit.
+
+**B. Execution (The Witness Generation)**
+- **Definition**: Assigning actual values (witnesses) to the circuit gates based on user inputs.
+- **SDK Implementation**: `programManager.execute(programId, functionName, fee, privateFee, inputs)`.
+- **Piece-by-Piece**:
+  1. The SDK fetches the necessary `Proving Key` (local or from network).
+  2. It takes user inputs (private or public).
+  3. It "runs" the circuit with these values to find the correct register states.
+- **AI Logic**: All private inputs remain on the user's machine during this step.
+- **Pitfall**: Providing a `u32` where a `u64` is expected will cause witness generation to fail.
+
+**C. Proving (The Cryptographic Signature)**
+- **Definition**: Creating a mathematical proof ($ \pi $) that says: "I know values that satisfy this circuit."
+- **Piece-by-Piece**:
+  1. The SDK uses the `Varuna` proof system.
+  2. It performs a series of polynomial commitments.
+  3. It outputs a constant-size string representing the proof.
+- **AI Logic**: This is the "Zero-Knowledge" part. The proof confirms the math without revealing the inputs.
+
+**D. Broadcasting (The Final Submission)**
+- **Definition**: Sending the completed transaction (Proof + State Root) to the Aleo network.
+- **SDK Implementation**: `networkClient.broadcastTransaction(transaction)`.
+- **Piece-by-Piece**:
+  1. The SDK serializes the transaction into hex or JSON.
+  2. It POSTs to the RPC endpoint (e.g., `api.explorer.provable.com`).
+  3. It returns a `Transaction ID`.
+
+### 2. Wallet Interaction Handshake (The Security Protocol)
+
+When building a frontend, the SDK never touches the private key. Instead, it "requests" the wallet to handle the signature.
+
+**Step 1: Connection & Permission**
+- **Syntax**: `await wallet.connect('testnet', ['decrypt', 'records'])`.
+- **Handshake**: The dApp sends a request; the Wallet pop-up asks the user: "Allow this site to view your records?"
+- **AI Logic**: Never call wallet functions before ensuring `wallet.connected === true`.
+
+**Step 2: Record Discovery**
+- **Syntax**: `await wallet.requestRecords(programId)`.
+- **Handshake**: The dApp asks for unspent credit records. The Wallet scans its local database (encrypted) and returns the record objects.
+- **AI Logic**: AI must handle the case where the user has 0 records or insufficient funds.
+
+**Step 3: Transaction Request**
+- **Syntax**: `await wallet.requestTransaction(txRequest)`.
+- **Handshake**:
+  1. dApp sends the Program ID, Function, and Inputs.
+  2. Wallet synthesis the circuit (or uses Remote Proving).
+  3. User sees a summary: "Spend 0.1 Credits to Vote?"
+  4. User clicks "Sign".
+- **AI Logic**: Always provide a "Pending" UI state while the wallet is processing.
+
+**Step 4: Signing & Return**
+- **Handshake**: The Wallet uses the user's Private Key to sign the transaction and returns the Transaction object to the dApp.
+- **AI Logic**: The dApp can then use `getTransaction(txId)` to monitor block inclusion.
+
+---
 *This protocol serves as the definitive cognitive architecture for Aleo Engineering. Strictly adhere to these definitions to achieve flawless system integration.*

@@ -2,6 +2,9 @@ import credits.aleo;
 
 program freemium_voting_v1.aleo {
 
+    @noupgrade
+    async constructor() {}
+
     // Platform Constants
     const VOTE_FEE: u64 = 100000u64; // 0.1 ALEO
     const PLATFORM_ADMIN: address = aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;

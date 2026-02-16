@@ -4,10 +4,12 @@ This document covers the implementation of a high-performance, privacy-preservin
 
 ---
 
-## 🚀 Deployment Info
+## 🚀 Deployment Status
 *   **Program ID**: `freemium_voting_v1.aleo`
-*   **Version**: 1.0
-*   **Checksum**: `[27u8, 72u8, 25u8, 32u8, 201u8, 76u8, 182u8, 96u8, 165u8, 23u8, 106u8, 191u8, 17u8, 42u8, 238u8, 240u8, 132u8, 206u8, 55u8, 241u8, 198u8, 75u8, 72u8, 191u8, 205u8, 205u8, 226u8, 47u8, 234u8, 249u8, 17u8, 152u8]`
+*   **Status**: Live on Testnet
+*   **Transaction ID**: `at1pja8lllwp8729flmtwucdj3q0ayxq7hh05yc2avljuwgmgcn35yqa8mtkd`
+*   **Explorer Link**: [View on Aleo Explorer](https://explorer.provable.com/transaction/at1pja8lllwp8729flmtwucdj3q0ayxq7hh05yc2avljuwgmgcn35yqa8mtkd)
+*   **Checksum**: `[251u8, 195u8, 62u8, 59u8, 45u8, 45u8, 46u8, 41u8, 75u8, 95u8, 114u8, 67u8, 73u8, 238u8, 196u8, 243u8, 134u8, 17u8, 239u8, 6u8, 41u8, 182u8, 212u8, 42u8, 135u8, 161u8, 122u8, 173u8, 207u8, 221u8, 58u8, 173u8]`
 
 ---
 

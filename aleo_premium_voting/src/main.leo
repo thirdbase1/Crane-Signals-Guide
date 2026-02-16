@@ -2,6 +2,9 @@ import credits.aleo;
 
 program premium_voting_v2.aleo {
 
+    @noupgrade
+    async constructor() {}
+
     const PLATFORM_FEE: u64 = 5000000u64; // 5 ALEO for DAO creation
     const PLATFORM_ADMIN: address = aleo1676v0q6rc2l3g7xy49p7243rlghvqle5ykswa8e2s9u7c24xxvzst4ufkl;
 

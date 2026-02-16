@@ -4,10 +4,12 @@ This document covers the high-performance DAO governance model on Aleo.
 
 ---
 
-## 🚀 Deployment Info
+## 🚀 Deployment Status
 *   **Program ID**: `premium_voting_v2.aleo`
-*   **Version**: 2.0 (Mapping Optimized)
-*   **Checksum**: `[96u8, 137u8, 95u8, 58u8, 124u8, 13u8, 204u8, 142u8, 249u8, 104u8, 26u8, 158u8, 175u8, 65u8, 11u8, 153u8, 245u8, 187u8, 151u8, 27u8, 114u8, 3u8, 178u8, 110u8, 52u8, 205u8, 167u8, 191u8, 49u8, 244u8, 244u8, 78u8]`
+*   **Status**: Live on Testnet
+*   **Transaction ID**: `at1g22p4g0zkpjj8cptx9764h64xxue95zn5a57j2d3dletugcm7crq6s6g0q`
+*   **Explorer Link**: [View on Aleo Explorer](https://explorer.provable.com/transaction/at1g22p4g0zkpjj8cptx9764h64xxue95zn5a57j2d3dletugcm7crq6s6g0q)
+*   **Checksum**: `[21u8, 182u8, 75u8, 160u8, 91u8, 58u8, 192u8, 82u8, 128u8, 73u8, 112u8, 68u8, 235u8, 160u8, 61u8, 6u8, 42u8, 233u8, 139u8, 206u8, 152u8, 90u8, 232u8, 211u8, 172u8, 140u8, 250u8, 249u8, 79u8, 72u8, 6u8, 230u8]`
 
 ---
 
