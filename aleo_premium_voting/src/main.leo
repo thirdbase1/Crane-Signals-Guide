@@ -77,7 +77,7 @@ program premium_voting_v1.aleo {
         // Placeholder
     }
 
-    // Subscribe to DAO (freemium - first 10 proposals free, then paid)
+    // Subscribe to DAO (Paid subscription)
     async transition subscribe_to_dao(
         public dao_record: PremiumDAO,
         public num_proposals: u64,
@@ -85,11 +85,12 @@ program premium_voting_v1.aleo {
     ) -> (DaoSubscription, credits.aleo/credits, credits.aleo/credits, Future) {
 
         let free_proposals: u64 = 10u64;
-        let fee: u64 = 0u64;
+        // Enforce that this transition is only for paid subscriptions
+        assert(num_proposals > free_proposals);
 
-        if (num_proposals > free_proposals) {
-            fee = (num_proposals - free_proposals) * dao_record.subscription_fee;
-        }
+        let fee: u64 = (num_proposals - free_proposals) * dao_record.subscription_fee;
+        // Ensure fee is at least 1u64 to avoid credits.aleo/transfer_private failure
+        assert(fee > 0u64);
 
         // Transfer fee to the DAO owner
         let (change, payment): (credits.aleo/credits, credits.aleo/credits) = credits.aleo/transfer_private(
@@ -110,6 +111,26 @@ program premium_voting_v1.aleo {
     }
 
     async function finalize_subscribe_to_dao() {
+        // Placeholder
+    }
+
+    // Free subscription for the first 10 proposals
+    async transition subscribe_free(
+        public dao_record: PremiumDAO,
+    ) -> (DaoSubscription, Future) {
+
+        let subscription: DaoSubscription = DaoSubscription {
+            owner: self.caller,
+            dao_address: dao_record.owner,
+            subscriber: self.caller,
+            duration_blocks: 100800u32,
+            active: true,
+        };
+
+        return (subscription, finalize_subscribe_free());
+    }
+
+    async function finalize_subscribe_free() {
         // Placeholder
     }
 
