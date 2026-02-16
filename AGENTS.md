@@ -1,4 +1,4 @@
-# 🧠 AGENTS.md: The Ultimate Aleo Technical Protocol (v3.0 - The Definitive Guide)
+# 🧠 AGENTS.md: The Ultimate Aleo Technical Protocol (v4.0 - Master Architect Edition)
 
 This document is the absolute technical "skill" manual for any AI agent working with the Aleo blockchain. It codifies the architecture, language, interaction protocols, and security audits required to build world-class, privacy-preserving decentralized applications.
 
@@ -66,12 +66,23 @@ Calling another program (e.g., `credits.aleo`) requires strict protocol:
 
 ---
 
-## 🚀 5. High-Performance Proving (The Browser Bypass)
-### Remote Proving (API Logic)
-1.  Frontend sends Leo code/inputs to a Node.js backend.
-2.  Backend uses `@provablehq/sdk` to run `buildDeploymentTransaction` or `execute`.
-3.  Backend returns the **Unsigned Transaction Object**.
-4.  Frontend calls `wallet.requestTransaction(unsignedTx)` for final signature.
+## 🚀 5. Mobile Browser Compatibility: The SharedArrayBuffer Protocol
+
+Modern browsers block `SharedArrayBuffer` for security, causing the Aleo WASM workers to crash. AI agents must apply this decision tree to ensure compatibility.
+
+### 🌳 Proving Decision Tree
+1.  **Scenario A: Control over Headers** (PWA/Standalone App)
+    - **Fix**: Use `coi-serviceworker`.
+    - **How**: Register the service worker to inject `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`.
+2.  **Scenario B: No Header Control** (Mobile Safari/Chrome/AI Previews)
+    - **Bypass**: Use **Remote Proving API**.
+    - **How**: Send inputs to a Node.js backend (`server/aleo-prover.ts`), generate the unsigned transaction there, and return it to the frontend for signing.
+
+### 🏎️ SDK Performance Tuning (Warm-Start)
+To reduce latency on mobile:
+1.  **Warm-Up**: Call `initThreadPool(1)` during the app's splash screen or idle time.
+2.  **Key Caching**: In the IDE, cache compiled `.prover` and `.verifier` keys in `IndexedDB` to skip the synthesis step (saving ~10-20 seconds).
+3.  **Circuit Pruning**: Prompt the AI to split massive programs into smaller sub-programs to keep individual proofs under the memory limit.
 
 ---
 
@@ -127,7 +138,17 @@ const hexToField = (hex: string) => {
 
 ---
 
-## 💾 10. High-Volume Record Management (UTXO Optimization)
+## 💾 10. Advanced Record Discovery Patterns
+To interact with complex dApps, an AI must scan for specific record types:
+
+### Scanning Algorithm:
+1.  **Fetch All**: `requestRecords(programId)`.
+2.  **Filter by Content**: If a dApp uses multiple record types (e.g., `Ticket` vs `Badge`), filter by the presence of specific fields using `decrypt()`.
+3.  **Compute State**: Sum up the values in records to show the user their "Private Balance" across all shards.
+
+---
+
+## ⚡ 11. High-Volume Record Management (UTXO Optimization)
 When performing 300+ calls, record fragmentation is the biggest bottleneck.
 1.  **Record Contention**: A single record can only be spent once per block.
 2.  **Strategy: Fan-Out**: To parallelize transactions, the user must first "split" their large credit record into many small ones (e.g., 10 records of 1 credit each).
@@ -135,7 +156,19 @@ When performing 300+ calls, record fragmentation is the biggest bottleneck.
 
 ---
 
-## ✅ 11. Final Protocol Checklist
+## 🪲 12. Wallet Transaction Debugger & Recovery Logic
+AI agents must map specific error messages to these programmatic fixes:
+
+| Error Message | Root Cause | Programmatic Fix |
+| :--- | :--- | :--- |
+| `SharedArrayBuffer is not defined` | Missing Isolation Headers | Initialize `coi-serviceworker` or switch to Remote Proving. |
+| `Unexpected rN type` | Type Mismatch | Verify literal suffixes (e.g., `1u32` vs `1u64`). |
+| `Transition not found` | Program Mismatch | Ensure `programId` in SDK matches the deployed name. |
+| `Record does not exist` | UTXO Contention | Implement a retry logic with a 5-second delay to wait for block inclusion. |
+
+---
+
+## ✅ 13. Final Protocol Checklist
 1.  **Constraint Count**: Check `leo build` output. If constraints > 1M, optimize.
 2.  **Privacy Guard**: Ensure no sensitive data is passed as `public` inputs to transitions.
 3.  **Fee Calculation**: Base deployment fee is ~2 credits; add 10 if name < 10 chars.
