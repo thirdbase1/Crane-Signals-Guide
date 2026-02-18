@@ -88,12 +88,31 @@ export function useAleoWallet() {
     }
   }, []);
 
+  /**
+   * Retrieves the status of a specific transaction from the wallet.
+   * This is preferred over explorer polling for Shielded transactions.
+   */
+  const getTransactionStatus = useCallback(async (txId: string) => {
+    const aleo = (window as any).aleo;
+    if (!aleo) return "Wallet not found";
+
+    try {
+      // The Provable/Shield wallet provides transaction status directly
+      const status = await aleo.transactionStatus(txId);
+      return status; // e.g., "Pending", "Completed", "Failed"
+    } catch (error) {
+      console.error("Failed to get transaction status:", error);
+      return "Error";
+    }
+  }, []);
+
   return {
     address,
     isConnecting,
     isExecuting,
     connect,
     disconnect,
-    requestTransaction
+    requestTransaction,
+    getTransactionStatus
   };
 }
