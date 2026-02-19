@@ -79,9 +79,9 @@ export function QuizComponent({ signal }: { signal: Signal }) {
     setMinting(true);
     try {
       const programId = "crane_signals_cert.aleo";
-      const functionName = "issue_certificate";
-      // Inputs: recipient address, signal_id (field)
-      const inputs = [address, signal.id.padEnd(16, '0')]; // Dummy padding for field
+      const functionName = "issue_certification";
+      // Inputs: recipient address, signal_id (u8)
+      const inputs = [address, `${signal.id}u8`];
 
       const id = await requestTransaction(programId, functionName, inputs, 0.1);
       setTxId(id);

@@ -1,7 +1,7 @@
 import { Account, AleoNetworkClient, NetworkRecordProvider } from "@provablehq/sdk";
 
 async function findRecords() {
-    const privateKey = "APrivateKey1zkpDbjq2UpmcACsQXP8QRC2WNfL2B29hzCF8NSHhzr5UyHq";
+    const privateKey = process.env.ALEO_PRIVATE_KEY || "APrivateKey1zkpDbjq2UpmcACsQXP8QRC2WNfL2B29hzCF8NSHhzr5UyHq";
     const account = new Account({ privateKey });
     const networkClient = new AleoNetworkClient("https://api.explorer.provable.com/v1");
     const recordProvider = new NetworkRecordProvider(account, networkClient);

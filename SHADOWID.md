@@ -1,60 +1,54 @@
-# 🌑 ShadowID: Identity Commitment Registry
+# 🌑 ShadowID Protocol
 
-This document details the production deployment and technical architecture of the ShadowID Identity Commitment Registry on the Aleo blockchain.
+This document details the production deployment and technical architecture of the ShadowID ecosystem on the Aleo blockchain.
 
 ## 🚀 Deployment Status
+
+### Core Registry
 - **Program Name**: `shadowid_v1.aleo`
 - **Transaction ID**: `at1xdv7apte46fzxakhz90kvf0s99w8e5yfn3pe9uxzxht4duggmqyskxd8z0`
 - **Network**: Aleo Testnet
-- **Deployment Fee**: 5.52 credits
+- **Features**: Identity Commitment Registry, Duplicate Prevention, Revocation Logic.
 
-## 🛠️ Issues Fixed & Security Enhancements
+### Zero-Knowledge Identity System
+- **Program Name**: `shadowid_v2.aleo`
+- **Transaction ID**: `at1kqn24hdqxqq0u5nmu4xgq7usjy2lcv8e2ksdl5ufnfay5mde258q8rwa90`
+- **Network**: Aleo Testnet
+- **Features**: Selective Disclosure, Range Proofs, Membership Proofs.
 
-The original contract code was refactored for the latest Leo v3.4.0 standards and secured against common vulnerabilities.
+---
 
-1.  **Duplicate Registration Prevention (Security Fix)**:
-    - *Issue*: The original code allowed the same commitment hash to be registered multiple times by different users, which could lead to identity collision or "squatting."
-    - *Fix*: Added `Mapping::contains(commitments, commitment_hash)` check in the `finalize` block. If a commitment hash already exists, the transaction fails.
+## 🛠️ shadowid_v2 Technical Fixes & Enhancements
 
-2.  **Modern Async/Finalize Syntax (v3.4.0 Compliance)**:
-    - *Issue*: The provided snippet used legacy `return ... then finalize(...)` syntax which is deprecated.
-    - *Fix*: Transitioned to `async transition` returning a `Future` as the final output. State updates are now isolated in explicit `async function` finalize blocks.
+The `shadowid_v2` program implements advanced ZK primitives. During deployment, the following critical issues were resolved:
 
-3.  **Namespace Fee Optimization**:
-    - *Requirement*: Aleo charges a 10-credit premium for program names under 10 characters.
-    - *Fix*: Renamed the program to `shadowid_v1.aleo` (14 characters) to achieve a **0-credit namespace fee**, saving the user 10 credits (~$20 USD equivalent).
+1.  **Block Height Restriction (Protocol Compliance)**:
+    - *Issue*: `block.height` cannot be accessed within a `transition` block in snarkVM.
+    - *Fix*: Refactored the code to pass `current_height` as a public input to the transition, which is then verified against `block.height` inside the `finalize` block. This ensures timing logic is cryptographically sound and protocol-compliant.
 
-4.  **Implicit Access Control via UTXO Model**:
-    - *Security*: The `revoke_commitment` function requires the `IdentityCommitment` record as an input. Since records are private and owned by specific addresses, Aleo's protocol-level spending logic ensures that **only the owner** can initiate a revocation.
+2.  **Cryptographic Type Alignment (BHP256)**:
+    - *Issue*: The original code used `field` for the `salt`.
+    - *Fix*: Corrected to `scalar` to match the `BHP256::commit_to_field` signature required for verifiable identity commitments.
 
-5.  **Revocation State Validation**:
-    - *Security*: Added `assert(!commitment.is_revoked)` to the revocation transition to prevent double-revocation of the same record.
+3.  **Identifier Length Constraints**:
+    - *Issue*: Function identifiers were too long (exceeding 31 bytes).
+    - *Fix*: Shortened internal identifiers (e.g., `finalize_register_issuer`) to ensure successful compilation.
 
-## 📜 Contract Functions
+---
 
-### 1. `register_commitment`
-- **Purpose**: Registers a new identity hash on-chain.
-- **Inputs**:
-    - `commitment_hash`: (field) The SHA-256 or Poseidon hash of the user's identity data.
-    - `timestamp`: (u64) Unix timestamp of registration.
-- **Output**: Returns a private `IdentityCommitment` record to the user's wallet.
+## 📜 shadowid_v2 Key Functions
 
-### 2. `revoke_commitment`
-- **Purpose**: Mark a previously registered identity as invalid.
-- **Inputs**:
-    - `commitment`: (Record) The unspent `IdentityCommitment` record owned by the user.
-- **Output**: Returns a new `IdentityCommitment` record with `is_revoked: true`. Updates the public `revocations` mapping.
+### 1. `prove_range`
+- **Purpose**: Prove that an attribute value (e.g., Age) is between a `min` and `max` bound.
+- **Privacy**: The actual value is never revealed; only the proof of the range is verified against the signed commitment.
 
-### 3. `check_revocation`
-- **Purpose**: A public-facing check to verify if a commitment is valid and active.
-- **Inputs**:
-    - `commitment_hash`: (field) The hash to verify.
-- **Logic**: Fails (asserts false) if the hash has been revoked or if it was never registered.
+### 2. `prove_membership`
+- **Purpose**: Prove that an attribute matches a specific required value.
+- **Privacy**: Used for verifying specific permissions (e.g., "Country == USA") without revealing other attributes in the credential.
 
-## 🗃️ Public Mappings
-- `commitments`: Stores `hash => owner_address` for identity ownership verification.
-- `revocations`: Stores `hash => is_revoked` (boolean).
-- `commitment_timestamps`: Stores `hash => registration_time`.
+### 3. `prove_existence`
+- **Purpose**: Prove that a user holds a valid credential signed by a registered issuer.
+- **Privacy**: Uses `BHP256` commitments to link the credential to the user's identity without revealing the underlying data.
 
 ---
 *Deployed and Verified by Jules, Automated Aleo Software Engineer.*
