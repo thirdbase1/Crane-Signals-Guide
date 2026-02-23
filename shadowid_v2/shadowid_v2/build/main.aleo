@@ -1,4 +1,4 @@
-program shadowid_v2.aleo;
+program shadowid_v3.aleo;
 
 record Credential:
     owner as address.private;
@@ -34,8 +34,9 @@ mapping trusted_issuers:
 
 function register_issuer:
     input r0 as address.public;
+    assert.eq self.caller aleo1cmay45pre5evtl72vj8zma9ayj0u2xrdkdv86w2zyz7pnmg7svxq0dzr9c;
     async register_issuer r0 into r1;
-    output r1 as shadowid_v2.aleo/register_issuer.future;
+    output r1 as shadowid_v3.aleo/register_issuer.future;
 
 finalize register_issuer:
     input r0 as address.public;
@@ -50,7 +51,7 @@ function issue_attestation:
     cast r0 self.caller r1 r2 r4 r3 into r5 as Attestation.record;
     async issue_attestation r2 self.caller r4 into r6;
     output r5 as Attestation.record;
-    output r6 as shadowid_v2.aleo/issue_attestation.future;
+    output r6 as shadowid_v3.aleo/issue_attestation.future;
 
 finalize issue_attestation:
     input r0 as field.public;
@@ -66,7 +67,7 @@ function revoke_attestation:
     input r0 as Attestation.record;
     assert.eq r0.issuer self.caller;
     async revoke_attestation r0.commitment into r1;
-    output r1 as shadowid_v2.aleo/revoke_attestation.future;
+    output r1 as shadowid_v3.aleo/revoke_attestation.future;
 
 finalize revoke_attestation:
     input r0 as field.public;
@@ -79,16 +80,24 @@ function prove_range:
     input r3 as field.public;
     hash.bhp256 r0.nonce into r4 as field;
     commit.bhp256 r0.attribute_hash r0.salt into r5 as field;
-    async prove_range r4 r5 into r6;
+    async prove_range r4 r5 r0.expiration into r6;
     output r4 as field.private;
-    output r6 as shadowid_v2.aleo/prove_range.future;
+    output r6 as shadowid_v3.aleo/prove_range.future;
 
 finalize prove_range:
     input r0 as field.public;
     input r1 as field.public;
-    get.or_use nullifiers[r0] false into r2;
-    not r2 into r3;
-    assert.eq r3 true;
+    input r2 as u64.public;
+    get.or_use nullifiers[r0] false into r3;
+    not r3 into r4;
+    assert.eq r4 true;
+    get attestations[r1] into r5;
+    get.or_use revocations[r1] false into r6;
+    not r6 into r7;
+    assert.eq r7 true;
+    cast block.height into r8 as u64;
+    gt r2 r8 into r9;
+    assert.eq r9 true;
     set true into nullifiers[r0];
 
 function prove_membership:
@@ -97,17 +106,24 @@ function prove_membership:
     input r2 as field.public;
     hash.bhp256 r0.nonce into r3 as field;
     commit.bhp256 r0.attribute_hash r0.salt into r4 as field;
-    async prove_membership r3 r4 r1 into r5;
+    async prove_membership r3 r4 r0.expiration into r5;
     output r3 as field.private;
-    output r5 as shadowid_v2.aleo/prove_membership.future;
+    output r5 as shadowid_v3.aleo/prove_membership.future;
 
 finalize prove_membership:
     input r0 as field.public;
     input r1 as field.public;
-    input r2 as field.public;
+    input r2 as u64.public;
     get.or_use nullifiers[r0] false into r3;
     not r3 into r4;
     assert.eq r4 true;
+    get attestations[r1] into r5;
+    get.or_use revocations[r1] false into r6;
+    not r6 into r7;
+    assert.eq r7 true;
+    cast block.height into r8 as u64;
+    gt r2 r8 into r9;
+    assert.eq r9 true;
     set true into nullifiers[r0];
 
 function prove_existence:
@@ -116,7 +132,7 @@ function prove_existence:
     hash.bhp256 r0.commitment into r2 as field;
     async prove_existence r0.commitment r0.expiration into r3;
     output r2 as field.private;
-    output r3 as shadowid_v2.aleo/prove_existence.future;
+    output r3 as shadowid_v3.aleo/prove_existence.future;
 
 finalize prove_existence:
     input r0 as field.public;
@@ -132,21 +148,19 @@ finalize prove_existence:
 function verify_proof:
     input r0 as field.public;
     input r1 as field.public;
-    input r2 as field.public;
-    async verify_proof r0 into r3;
+    async verify_proof r0 into r2;
     output true as boolean.private;
-    output r3 as shadowid_v2.aleo/verify_proof.future;
+    output r2 as shadowid_v3.aleo/verify_proof.future;
 
 finalize verify_proof:
     input r0 as field.public;
     get.or_use nullifiers[r0] false into r1;
-    not r1 into r2;
-    assert.eq r2 true;
+    assert.eq r1 true;
 
 function check_nullifier:
     input r0 as field.public;
     async check_nullifier r0 into r1;
-    output r1 as shadowid_v2.aleo/check_nullifier.future;
+    output r1 as shadowid_v3.aleo/check_nullifier.future;
 
 finalize check_nullifier:
     input r0 as field.public;
