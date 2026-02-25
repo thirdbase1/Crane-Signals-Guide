@@ -73,7 +73,7 @@ export function useAleoWallet() {
         programId,
         functionName,
         inputs: formattedInputs,
-        fee: fee.toString() + "u64", // Standard fee formatting
+        fee: Math.floor(fee * 1_000_000).toString() + "u64", // Standard fee formatting (microcredits)
       };
 
       console.log("Requesting transaction:", txRequest);
