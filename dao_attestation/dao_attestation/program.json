@@ -1,0 +1,6 @@
+{
+    "program": "dao_attestation_v1.aleo",
+    "version": "0.1.0",
+    "description": "Secure DAO Attestation Protocol v1",
+    "license": "MIT"
+}
