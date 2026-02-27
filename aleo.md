@@ -13,9 +13,9 @@ This document details the development and configuration of the `voting_v1.aleo` 
 
 ## 🛠️ Key Improvements & Fixes
 
-### 1. 🔄 True Upgradeability
-*   **Implementation**: Added the `@admin(address="...")` attribute to the `async constructor`.
-*   **Benefit**: This allows the owner of the specified address to upgrade the program logic in the future without losing the data stored in mappings (mappings remain persistent across upgrades in Aleo).
+### 1. 🛡️ Trustless Execution
+*   **Implementation**: Added the `@noupgrade` attribute to the `async constructor`.
+*   **Benefit**: This ensures the program is immutable once deployed. Users can trust that the voting logic cannot be changed by any party, including the developer.
 
 ### 2. 🛡️ Mapping State Management
 *   **Issue**: The original AVM/Leo code attempted to update state directly in transitions.

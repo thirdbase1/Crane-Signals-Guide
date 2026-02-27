@@ -1,62 +1,34 @@
-# 💎 Aleo Premium Voting Smart Contract: Deployment & Refinement
+# 💎 Aleo Premium Voting: Technical Breakdown (premium_voting_v2.aleo)
 
-This document covers the deployment of the `premium_voting_v2_ultimate.aleo` program. This contract implements a "Freemium" DAO subscription model and private voting records.
+This document covers the high-performance DAO governance model on Aleo.
 
 ---
 
 ## 🚀 Deployment Status
-*   **Program ID**: `premium_voting_v2_ultimate.aleo` (Ultimate Edition)
-*   **Status**: Compiled & Ready for Deployment
-*   **Checksum**: `[58u8, 163u8, 18u8, 209u8, 236u8, 70u8, 23u8, 147u8, 183u8, 49u8, 8u8, 182u8, 232u8, 119u8, 143u8, 145u8, 32u8, 116u8, 167u8, 97u8, 80u8, 137u8, 156u8, 30u8, 154u8, 233u8, 9u8, 10u8, 100u8, 162u8, 167u8, 244u8]`
-*   **Network**: Aleo Testnet
+*   **Program ID**: `premium_voting_v2.aleo`
+*   **Status**: Live on Testnet
+*   **Transaction ID**: `at1g22p4g0zkpjj8cptx9764h64xxue95zn5a57j2d3dletugcm7crq6s6g0q`
+*   **Explorer Link**: [View on Aleo Explorer](https://explorer.provable.com/transaction/at1g22p4g0zkpjj8cptx9764h64xxue95zn5a57j2d3dletugcm7crq6s6g0q)
+*   **Checksum**: `[21u8, 182u8, 75u8, 160u8, 91u8, 58u8, 192u8, 82u8, 128u8, 73u8, 112u8, 68u8, 235u8, 160u8, 61u8, 6u8, 42u8, 233u8, 139u8, 206u8, 152u8, 90u8, 232u8, 211u8, 172u8, 140u8, 250u8, 249u8, 79u8, 72u8, 6u8, 230u8]`
 
 ---
 
-## 🛠️ Critical Fixes & Logic Refinements
-
-### 1. 🪙 Credits Record Interaction
-*   Integrated `credits.aleo/transfer_private`. In Aleo, credits are records that must be spent via specialized transitions. I properly handled the input record and the returned `(change, payment)` tuple.
-
-### 2. ⚡ Zero-Fee Transfer Bug Fix (v2)
-*   **Issue**: Calling `transfer_private` with a `0u64` amount causes transaction failure.
-*   **Solution**: Split the logic. `subscribe_to_dao` now enforces a paid fee for subscriptions > 10 proposals. A new `subscribe_free` transition handles the freemium tier without triggering a credit transfer.
-
-### 3. 🛡️ Record Compliance
-*   Every `record` in Leo requires an `owner` field of type `address`. Added this to `ProposalRecord`, `VoteRecord`, and `DaoSubscription` to ensure the ZK-circuit compiled correctly.
+## 🛠️ Feature Set
+1.  **Platform Registry**: DAOs are registered in a public mapping (`daos`) for shared discoverability.
+2.  **DAO Proposal Creation**: Registered DAO owners can create official proposals.
+3.  **Subscription Tiers**:
+    - **Free Trial**: One-time 1000 block trial subscription.
+    - **Paid Duration**: User-defined duration with automated fee calculation.
+4.  **Scalable State**: Uses public mappings for shared data and private records for user credentials.
 
 ---
 
-## 📞 API Usage Guide
+## 📞 API Usage
 
-### 📱 Client-Side (Frontend Wallet Adapter)
 ```typescript
-const { requestTransaction } = useWallet();
+// Register a DAO (5 ALEO Platform Fee)
+await programManager.execute("premium_voting_v2.aleo", "create_premium_dao", 1.5, false, [name, tokenAddr, subFee, creditsRecord]);
 
-const handleCreateDAO = async () => {
-    const inputs = [
-        "name_field",
-        "aleo1...", // token address
-        "1000u64", // subscription fee
-        "{CREDITS_RECORD_OBJECT}",
-        "5000000u64"
-    ];
-
-    await requestTransaction({
-        programId: "premium_voting_v2_ultimate.aleo",
-        functionName: "create_premium_dao",
-        inputs: inputs,
-        fee: 0.5
-    });
-};
+// Subscribe to a DAO (Paid)
+await programManager.execute("premium_voting_v2.aleo", "subscribe_paid", 0.5, false, [daoOwnerAddr, duration, fee, creditsRecord]);
 ```
-
----
-
-## 📜 Function Overview
-1.  **`create_premium_dao`**: Initializes a DAO record. Requires a 5 ALEO setup fee sent to the treasury.
-2.  **`subscribe_to_dao`**: Issues a `DaoSubscription` record for paid tiers.
-3.  **`subscribe_free`**: Issues a `DaoSubscription` record for the free tier (first 10 proposals).
-4.  **`cast_vote`**: Generates a private `VoteRecord` for the user.
-
----
-*Developed by Jules - Automated Aleo Systems Engineer.*

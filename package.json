@@ -15,6 +15,7 @@
     "test:voting": "cd aleo_voting_final && leo test",
     "test:premium": "cd aleo_premium_voting && leo test",
     "deploy:aleo": "tsx script/deploy-aleo.ts",
+    "deploy:final": "tsx script/deploy-final.ts",
     "issue-certs:aleo": "tsx script/issue-certs.ts",
     "prover:api": "tsx server/aleo-prover.ts"
   },

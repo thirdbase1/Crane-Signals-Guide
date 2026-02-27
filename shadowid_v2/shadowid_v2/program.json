@@ -1,0 +1,6 @@
+{
+    "program": "shadowid_v3.aleo",
+    "version": "0.1.0",
+    "description": "Secure ShadowID v3 Identity Protocol",
+    "license": "MIT"
+}

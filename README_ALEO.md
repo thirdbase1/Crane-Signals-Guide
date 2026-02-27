@@ -59,7 +59,7 @@ leo deploy --private-key <KEY> \
            --priority-fees 1000000 \
            --yes --broadcast
 ```
-*   **Critical Fix for "Constructor" Error**: Modern Aleo requires a constructor with an annotation. Use `@noupgrade async constructor() {}` to ensure the program is immutable and deployable.
+*   **Critical Fix for "Constructor" Error**: Modern Aleo requires a constructor with an annotation. Use `@noupgrade async constructor() {}` to ensure the program is immutable and deployable. For upgradeable contracts, use `@admin(address="...")`.
 
 ### Step 3: Browser/SDK Deployment
 To deploy via the browser without errors:

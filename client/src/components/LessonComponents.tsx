@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { CheckCircle, XCircle, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
 import { Signal } from "@/lib/course-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { useAleoWallet } from "@/hooks/use-aleo-wallet";
+import { useToast } from "@/hooks/use-toast";
 
 export function SignalCard({ signal }: { signal: Signal }) {
   return (
@@ -40,8 +42,60 @@ export function SignalCard({ signal }: { signal: Signal }) {
 export function QuizComponent({ signal }: { signal: Signal }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [minting, setMinting] = useState(false);
+  const [txId, setTxId] = useState<string | null>(null);
+  const [txStatus, setTxStatus] = useState<string | null>(null);
+
+  const { address, connect, requestTransaction, getTransactionStatus } = useAleoWallet();
+  const { toast } = useToast();
 
   const isCorrect = selected === signal.quiz.correctAnswer;
+
+  // Poll for transaction status if we have a txId
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (txId && (txStatus === "Pending" || !txStatus)) {
+      interval = setInterval(async () => {
+        const status = await getTransactionStatus(txId);
+        setTxStatus(status);
+        if (status === "Completed") {
+          toast({
+            title: "Certification Minted!",
+            description: "Your signal mastery has been recorded on Aleo.",
+          });
+          clearInterval(interval);
+        }
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [txId, txStatus, getTransactionStatus, toast]);
+
+  const handleMintCertificate = async () => {
+    if (!address) {
+      await connect();
+      return;
+    }
+
+    setMinting(true);
+    try {
+      const programId = "crane_signals_cert.aleo";
+      const functionName = "issue_certification";
+      // Inputs: recipient address, signal_id (u8)
+      const inputs = [address, `${signal.id}u8`];
+
+      const id = await requestTransaction(programId, functionName, inputs, 0.1);
+      setTxId(id);
+      setTxStatus("Pending");
+    } catch (error: any) {
+      toast({
+        title: "Minting Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setMinting(false);
+    }
+  };
 
   return (
     <Card className="bg-muted/30 border-none">
@@ -82,9 +136,34 @@ export function QuizComponent({ signal }: { signal: Signal }) {
                 : `The correct answer is: ${signal.quiz.options[signal.quiz.correctAnswer]}`
               }
             </p>
-            <Button variant="outline" onClick={() => { setSubmitted(false); setSelected(null); }}>
-              Try Again
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button variant="outline" onClick={() => {
+                setSubmitted(false);
+                setSelected(null);
+                setTxId(null);
+                setTxStatus(null);
+              }}>
+                Try Again
+              </Button>
+
+              {isCorrect && !txId && (
+                <Button
+                  onClick={handleMintCertificate}
+                  disabled={minting}
+                  className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                >
+                  {minting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                  {address ? "Mint ZK-Certificate" : "Connect Wallet to Mint"}
+                </Button>
+              )}
+
+              {txId && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-background border rounded-md text-sm font-medium">
+                  <div className={`h-2 w-2 rounded-full ${txStatus === "Completed" ? "bg-green-500" : "bg-amber-500 animate-pulse"}`} />
+                  Status: {txStatus || "Processing..."}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </CardContent>

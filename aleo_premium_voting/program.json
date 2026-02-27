@@ -1,7 +1,7 @@
 {
-  "program": "premium_voting_v2_ultimate.aleo",
+  "program": "premium_voting_v2.aleo",
   "version": "0.1.0",
-  "description": "Premium DAO and Voting Program",
+  "description": "Premium DAO and Governance Program",
   "license": "MIT",
   "leo": "3.4.0",
   "dependencies": [
