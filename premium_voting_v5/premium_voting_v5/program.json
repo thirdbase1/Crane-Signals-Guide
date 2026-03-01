@@ -1,0 +1,16 @@
+{
+  "program": "premium_voting_v5.aleo",
+  "version": "0.1.0",
+  "description": "Secure Premium Voting Protocol v5",
+  "license": "MIT",
+  "leo": "3.4.0",
+  "dependencies": [
+    {
+      "name": "credits.aleo",
+      "location": "network",
+      "path": null,
+      "edition": null
+    }
+  ],
+  "dev_dependencies": null
+}

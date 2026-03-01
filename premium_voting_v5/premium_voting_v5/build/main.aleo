@@ -1,5 +1,5 @@
 import credits.aleo;
-program premium_voting_v4.aleo;
+program premium_voting_v5.aleo;
 
 record Subscription:
     owner as address.private;
@@ -62,7 +62,7 @@ mapping dao_owners:
 function register_dao:
     input r0 as address.public;
     async register_dao r0 self.caller into r1;
-    output r1 as premium_voting_v4.aleo/register_dao.future;
+    output r1 as premium_voting_v5.aleo/register_dao.future;
 
 finalize register_dao:
     input r0 as address.public;
@@ -85,7 +85,7 @@ function subscribe_paid:
     output r8 as Subscription.record;
     output r5 as credits.aleo/credits.record;
     output r6 as credits.aleo/credits.record;
-    output r9 as premium_voting_v4.aleo/subscribe_paid.future;
+    output r9 as premium_voting_v5.aleo/subscribe_paid.future;
 
 finalize subscribe_paid:
     input r0 as address.public;
@@ -103,7 +103,7 @@ function create_proposal:
     input r3 as u8.public;
     input r4 as u64.public;
     async create_proposal r0 r1 r2 r3 r4 into r5;
-    output r5 as premium_voting_v4.aleo/create_proposal.future;
+    output r5 as premium_voting_v5.aleo/create_proposal.future;
 
 finalize create_proposal:
     input r0 as u64.public;
@@ -136,7 +136,7 @@ function vote_yes:
     commit.bhp256 r6 r7 into r8 as field;
     async vote_yes r0 r8 r3 r4 into r9;
     output r5 as VoteReceipt.record;
-    output r9 as premium_voting_v4.aleo/vote_yes.future;
+    output r9 as premium_voting_v5.aleo/vote_yes.future;
 
 finalize vote_yes:
     input r0 as u64.public;
@@ -157,10 +157,76 @@ finalize vote_yes:
     add r10 r2 into r11;
     set r11 into yes_votes[r0];
 
+function vote_no:
+    input r0 as u64.public;
+    input r1 as field.public;
+    input r2 as field.public;
+    input r3 as u64.public;
+    input r4 as address.public;
+    cast self.caller r0 r1 r2 r3 into r5 as VoteReceipt.record;
+    cast self.caller into r6 as field;
+    cast r0 into r7 as scalar;
+    commit.bhp256 r6 r7 into r8 as field;
+    async vote_no r0 r8 r3 r4 into r9;
+    output r5 as VoteReceipt.record;
+    output r9 as premium_voting_v5.aleo/vote_no.future;
+
+finalize vote_no:
+    input r0 as u64.public;
+    input r1 as field.public;
+    input r2 as u64.public;
+    input r3 as address.public;
+    get proposal_end_blocks[r0] into r4;
+    lte block.height r4 into r5;
+    assert.eq r5 true;
+    get.or_use dao_pause_state[r3] false into r6;
+    not r6 into r7;
+    assert.eq r7 true;
+    contains voted_proposals[r1] into r8;
+    not r8 into r9;
+    assert.eq r9 true;
+    set true into voted_proposals[r1];
+    get.or_use no_votes[r0] 0u64 into r10;
+    add r10 r2 into r11;
+    set r11 into no_votes[r0];
+
+function vote_abstain:
+    input r0 as u64.public;
+    input r1 as field.public;
+    input r2 as field.public;
+    input r3 as u64.public;
+    input r4 as address.public;
+    cast self.caller r0 r1 r2 r3 into r5 as VoteReceipt.record;
+    cast self.caller into r6 as field;
+    cast r0 into r7 as scalar;
+    commit.bhp256 r6 r7 into r8 as field;
+    async vote_abstain r0 r8 r3 r4 into r9;
+    output r5 as VoteReceipt.record;
+    output r9 as premium_voting_v5.aleo/vote_abstain.future;
+
+finalize vote_abstain:
+    input r0 as u64.public;
+    input r1 as field.public;
+    input r2 as u64.public;
+    input r3 as address.public;
+    get proposal_end_blocks[r0] into r4;
+    lte block.height r4 into r5;
+    assert.eq r5 true;
+    get.or_use dao_pause_state[r3] false into r6;
+    not r6 into r7;
+    assert.eq r7 true;
+    contains voted_proposals[r1] into r8;
+    not r8 into r9;
+    assert.eq r9 true;
+    set true into voted_proposals[r1];
+    get.or_use abstain_votes[r0] 0u64 into r10;
+    add r10 r2 into r11;
+    set r11 into abstain_votes[r0];
+
 function emergency_pause:
     input r0 as address.public;
     async emergency_pause r0 self.caller into r1;
-    output r1 as premium_voting_v4.aleo/emergency_pause.future;
+    output r1 as premium_voting_v5.aleo/emergency_pause.future;
 
 finalize emergency_pause:
     input r0 as address.public;
