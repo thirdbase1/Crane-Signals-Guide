@@ -240,6 +240,3 @@ finalize emergency_pause:
     is.eq r2 r1 into r3;
     assert.eq r3 true;
     set true into dao_pause_state[r0];
-
-constructor:
-    assert.eq edition 0u16;
