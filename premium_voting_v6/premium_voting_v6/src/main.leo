@@ -235,4 +235,12 @@ program premium_voting_v6.aleo {
         assert(owner == caller);
         Mapping::set(dao_pause_state, dao, true);
     }
+
+
+
+
+    @custom
+    async constructor() {
+        assert_eq(true, true);
+    }
 }

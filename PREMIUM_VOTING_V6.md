@@ -5,7 +5,8 @@ This document details the deployment, features, and security fixes for the `prem
 ## Deployment Details
 *   **Program ID**: `premium_voting_v6.aleo`
 *   **Network**: Aleo Testnet
-*   **Status**: Active
+*   **Status**: Deployed
+*   **Transaction ID**: `at1yn3s2sxjyflvsg32ug7txpk8d446835f559gmsqcg0zwlh9yrsyqttjsnz`
 
 ## Overview
 The `premium_voting_v6.aleo` is the latest iteration of the premium voting protocol on the Aleo blockchain. This version improves upon previous iterations by deeply integrating zero-knowledge capabilities for completely anonymous and secure governance.
