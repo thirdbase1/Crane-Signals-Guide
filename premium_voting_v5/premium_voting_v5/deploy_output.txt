@@ -1,0 +1,98 @@
+Warning [WTYC0372004]: `self.caller` used as the owner of record `Subscription`
+    --> /app/premium_voting_v5/premium_voting_v5/src/main.leo:64:20
+     |
+  64 |             owner: self.caller,
+     |                    ^^^^^^^^^^^
+     |
+     = `self.caller` may refer to a program address, which cannot spend records.
+
+Warning [WTYC0372004]: `self.caller` used as the owner of record `VoteReceipt`
+    --> /app/premium_voting_v5/premium_voting_v5/src/main.leo:119:20
+     |
+ 119 |             owner: self.caller,
+     |                    ^^^^^^^^^^^
+     |
+     = `self.caller` may refer to a program address, which cannot spend records.
+
+Warning [WTYC0372004]: `self.caller` used as the owner of record `VoteReceipt`
+    --> /app/premium_voting_v5/premium_voting_v5/src/main.leo:159:20
+     |
+ 159 |             owner: self.caller,
+     |                    ^^^^^^^^^^^
+     |
+     = `self.caller` may refer to a program address, which cannot spend records.
+
+Warning [WTYC0372004]: `self.caller` used as the owner of record `VoteReceipt`
+    --> /app/premium_voting_v5/premium_voting_v5/src/main.leo:199:20
+     |
+ 199 |             owner: self.caller,
+     |                    ^^^^^^^^^^^
+     |
+     = `self.caller` may refer to a program address, which cannot spend records.
+
+       Leo     118 statements before dead code elimination.
+       Leo     118 statements after dead code elimination.
+       Leo     The program checksum is: '[20u8, 0u8, 212u8, 173u8, 154u8, 224u8, 255u8, 23u8, 203u8, 255u8, 194u8, 232u8, 76u8, 216u8, 132u8, 139u8, 121u8, 68u8, 50u8, 2u8, 4u8, 176u8, 131u8, 99u8, 58u8, 103u8, 178u8, 117u8, 157u8, 80u8, 108u8, 115u8]'.
+       Leo ✅ Compiled 'premium_voting_v5.aleo' into Aleo instructions.
+
+📢 Using the following consensus heights: 0,2950000,4800000,6625000,6765000,7600000,8365000,9173000,9800000,10525000,11952000,12669000
+  To override, pass in `--consensus-heights` or override the environment variable `CONSENSUS_VERSION_HEIGHTS`.
+
+Attempting to determine the consensus version from the latest block height at https://api.explorer.provable.com/v1...
+
+🛠️  Deployment Plan Summary
+──────────────────────────────────────────────
+🔧 Configuration:
+  Private Key:        APrivateKey1zkpEkWY9ESYk...
+  Address:            aleo16rv0na97jvrngjv5ldd...
+  Endpoint:           https://api.explorer.provable.com/v1
+  Network:            testnet
+  Consensus Version:  12
+
+📦 Deployment Tasks:
+  • premium_voting_v5.aleo  │ priority fee: 0  │ fee record: no (public fee)
+
+🌐 Remote Dependencies:
+(Leo will not generate transactions for these programs)
+  • credits.aleo
+
+⚙️ Actions:
+  • Transaction(s) will NOT be printed to the console.
+  • Transaction(s) will NOT be saved to a file.
+  • Transaction(s) will be broadcast to https://api.explorer.provable.com/v1
+
+⚠️ Warnings:
+  • The program 'premium_voting_v5.aleo' already exists on the network. Please use `leo upgrade` instead.
+──────────────────────────────────────────────
+
+
+🔧 Your program 'premium_voting_v5.aleo' has the following constructor.
+──────────────────────────────────────────────
+constructor:
+    assert.eq edition 0u16;
+──────────────────────────────────────────────
+Once it is deployed, it CANNOT be changed.
+
+📦 Creating deployment transaction for 'premium_voting_v5.aleo'...
+
+
+📊 Deployment Summary for premium_voting_v5.aleo
+──────────────────────────────────────────────
+  Total Variables:      299,988
+  Total Constraints:    233,252
+  Max Variables:        2,097,152
+  Max Constraints:      2,097,152
+
+💰 Cost Breakdown (credits)
+  Transaction Storage:  8.160000
+  Program Synthesis:    0.533240
+  Namespace:            1.000000
+  Constructor:          0.002000
+  Priority Fee:         0.000000
+  Total Fee:            9.695240
+──────────────────────────────────────────────
+
+📡 Broadcasting deployment for premium_voting_v5.aleo...
+💰Your current public balance is 25.65805 credits.
+
+Error [ECLI0377032]: Failed to broadcast transaction: http status: 500
