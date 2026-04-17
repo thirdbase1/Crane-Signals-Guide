@@ -1,18 +1,17 @@
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, ShieldCheck } from "lucide-react";
+import { FileText, Download, ShieldCheck, BookOpen, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { signals } from "@/lib/course-data";
 import { useRef } from "react";
 // @ts-ignore
 import html2pdf from "html2pdf.js";
+import { motion } from "framer-motion";
 
 export default function Downloads() {
   const fullCourseRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadFullCourse = () => {
-    // We'll create a temporary hidden element with full content for PDF generation
-    // or we can generate it from the course data object
     const element = document.createElement('div');
     element.innerHTML = `
       <div style="font-family: sans-serif; padding: 20px;">
@@ -56,7 +55,7 @@ export default function Downloads() {
       filename: 'crane-signals-complete-handbook.pdf',
       image: { type: 'png' as const, quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      jsPDF: { unit: 'in' as const, format: 'letter' as const, orientation: 'portrait' as const }
     };
 
     html2pdf().set(opt).from(element).save();
@@ -102,7 +101,7 @@ export default function Downloads() {
       filename: `${signal.name.toLowerCase().replace(/\s+/g, '-')}-card.pdf`,
       image: { type: 'png' as const, quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      jsPDF: { unit: 'in' as const, format: 'letter' as const, orientation: 'portrait' as const }
     };
 
     html2pdf().set(opt).from(element).save();
@@ -112,92 +111,172 @@ export default function Downloads() {
   return (
     <Layout>
       <div className="container px-4 md:px-6 py-12">
-        <div className="max-w-3xl mx-auto text-center mb-12">
-          <h1 className="text-4xl font-bold font-oswald mb-4">Download Course Materials</h1>
-          <p className="text-muted-foreground text-lg">
+        {/* Header Section */}
+        <motion.div 
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="inline-flex items-center gap-2 text-primary font-semibold mb-4">
+            <Download className="h-5 w-5" />
+            <span className="font-oswald uppercase tracking-wide text-sm">Offline Resources</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold font-oswald uppercase mb-4">
+            Download Course <span className="text-primary">Materials</span>
+          </h1>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Get the full course handbook and individual signal reference cards for offline use and jobsite safety meetings.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Full Handbook */}
-          <Card className="border-2 border-primary/20 bg-primary/5">
-            <CardHeader>
-              <CardTitle className="font-oswald text-2xl flex items-center gap-2">
-                <ShieldCheck className="h-6 w-6 text-primary" />
-                Complete Handbook
-              </CardTitle>
-              <CardDescription>
-                All {signals.length} signals, safety guidelines, and quizzes in one document.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 mb-6 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><CheckCircleIcon className="h-4 w-4" /> Printable A4 Format</li>
-                <li className="flex items-center gap-2"><CheckCircleIcon className="h-4 w-4" /> High-resolution diagrams</li>
-                <li className="flex items-center gap-2"><CheckCircleIcon className="h-4 w-4" /> Includes safety checklist</li>
-              </ul>
-              <Button 
-                className="w-full font-oswald uppercase" 
-                size="lg"
-                onClick={handleDownloadFullCourse}
-              >
-                <Download className="mr-2 h-4 w-4" /> Download Full Course PDF
-              </Button>
-            </CardContent>
-          </Card>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5 h-full shadow-lg">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-gradient-to-br from-primary to-secondary p-3 rounded-xl shadow-md">
+                    <ShieldCheck className="h-6 w-6 text-primary-foreground" />
+                  </div>
+                  <CardTitle className="font-oswald text-2xl">Complete Handbook</CardTitle>
+                </div>
+                <CardDescription>
+                  All {signals.length} signals, safety guidelines, and quizzes in one document.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ul className="space-y-3 text-sm">
+                  {[
+                    "Printable A4 Format",
+                    "High-resolution diagrams",
+                    "Includes safety checklist",
+                    "Complete lesson content",
+                    "All quiz questions and answers"
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-2 text-muted-foreground">
+                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  className="w-full font-oswald uppercase bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-200 shadow-md" 
+                  size="lg"
+                  onClick={handleDownloadFullCourse}
+                >
+                  <Download className="mr-2 h-4 w-4" /> Download Full Course PDF
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Individual Cards */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-oswald text-2xl flex items-center gap-2">
-                <FileText className="h-6 w-6 text-muted-foreground" />
-                Signal Reference Cards
-              </CardTitle>
-              <CardDescription>
-                Individual cards for each signal. Great for daily toolbox talks.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                {signals.map(s => (
-                  <div key={s.id} className="flex items-center justify-between p-2 rounded bg-muted/50">
-                    <span className="font-medium text-sm">{s.name} Card</span>
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8"
-                        onClick={() => handleDownloadSignal(s.id)}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="h-full shadow-lg">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-muted p-3 rounded-xl">
+                    <FileText className="h-6 w-6 text-muted-foreground" />
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <CardTitle className="font-oswald text-2xl">Signal Reference Cards</CardTitle>
+                </div>
+                <CardDescription>
+                  Individual cards for each signal. Great for daily toolbox talks.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2">
+                  {signals.map((s, idx) => (
+                    <motion.div 
+                      key={s.id} 
+                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors border"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 + idx * 0.02 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="bg-primary/10 h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold text-primary">
+                          {idx + 1}
+                        </div>
+                        <div>
+                          <span className="font-medium text-sm">{s.name}</span>
+                          <span className="block text-xs text-muted-foreground">{s.category}</span>
+                        </div>
+                      </div>
+                      <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 text-muted-foreground hover:text-primary"
+                          onClick={() => handleDownloadSignal(s.id)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
+
+        {/* Additional Resources */}
+        <motion.div 
+          className="mt-16 max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="bg-card rounded-2xl border p-8 shadow-sm">
+            <h3 className="text-2xl font-bold font-oswald uppercase mb-6 flex items-center gap-3">
+              <BookOpen className="h-6 w-6 text-primary" />
+              Additional Resources
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                {
+                  title: "ANSI B30.5 Standard",
+                  desc: "Official American National Standard for mobile crane hand signals.",
+                  link: "#"
+                },
+                {
+                  title: "Safety Training Videos",
+                  desc: "Visual demonstrations of proper signal techniques.",
+                  link: "#"
+                },
+                {
+                  title: "Quick Reference Poster",
+                  desc: "Printable poster for jobsite display.",
+                  link: "#"
+                },
+                {
+                  title: "Exam Preparation Guide",
+                  desc: "Practice questions for crane operator certification.",
+                  link: "#"
+                }
+              ].map((resource, idx) => (
+                <div key={idx} className="flex items-start gap-4 p-4 rounded-xl bg-muted/30 border hover:border-primary/30 transition-colors">
+                  <div className="bg-primary/10 p-2 rounded-lg mt-1">
+                    <FileText className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold font-oswald text-sm uppercase">{resource.title}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">{resource.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
       </div>
     </Layout>
-  );
-}
-
-function CheckCircleIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
   );
 }
